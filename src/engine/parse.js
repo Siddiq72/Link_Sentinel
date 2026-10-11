@@ -51,7 +51,11 @@ export function parseInput(rawInput) {
   try {
     url = new URL(workingUrl);
   } catch {
-    throw new Error('Please enter a valid link.');
+    const error = new Error('Malformed URI structure');
+    error.isMalformed = true;
+    error.rawInput = rawInput;
+    error.workingUrl = workingUrl;
+    throw error;
   }
 
   return {

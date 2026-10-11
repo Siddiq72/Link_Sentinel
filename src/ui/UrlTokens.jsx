@@ -85,12 +85,12 @@ export default function UrlTokens({ parts, anomalies = [], verdict }) {
         <span className="text-xs font-mono text-slate-400">Analyzed Link</span>
       </div>
 
-      {/* Monospace non-clickable tokens with horizontal scroll if needed */}
-      <div className="bg-slate-950 p-4 rounded-xl flex flex-wrap items-end gap-x-2 gap-y-3 font-mono border border-slate-800 overflow-x-auto max-w-full">
+      {/* Monospace non-clickable tokens with responsive wrapping */}
+      <div className="bg-slate-950 p-3.5 sm:p-4 rounded-xl flex flex-wrap items-end gap-x-2 gap-y-3 font-mono border border-slate-800 max-w-full">
         {/* Protocol */}
         {protocol && (
           <div className="flex flex-col items-start gap-1 shrink-0">
-            <span className="px-2.5 py-1.5 rounded-lg bg-slate-900 text-slate-300 text-sm select-all">
+            <span className="px-2.5 py-1.5 rounded-lg bg-slate-900 text-slate-300 text-xs sm:text-sm select-all">
               {protocol}
             </span>
             <span className="text-[10px] uppercase font-bold text-slate-500 px-1">
@@ -101,9 +101,9 @@ export default function UrlTokens({ parts, anomalies = [], verdict }) {
 
         {/* Userinfo token */}
         {userinfo && (
-          <div className="flex flex-col items-start gap-1 shrink-0">
+          <div className="flex flex-col items-start gap-1 max-w-full">
             <span
-              className={`px-2.5 py-1.5 rounded-lg text-sm font-bold select-all ${
+              className={`px-2.5 py-1.5 rounded-lg text-xs sm:text-sm font-bold select-all max-w-full break-all ${
                 isDecoyUserinfo
                   ? 'bg-red-950/80 border-2 border-red-500 text-red-300 shadow-[0_0_14px_rgba(239,68,68,0.3)]'
                   : 'bg-slate-900 border border-slate-700 text-slate-300'
@@ -123,8 +123,8 @@ export default function UrlTokens({ parts, anomalies = [], verdict }) {
 
         {/* Host token */}
         {host && (
-          <div className="flex flex-col items-start gap-1 shrink-0">
-            <span className={`px-3 py-1.5 rounded-lg select-all ${hostContainerClass}`}>
+          <div className="flex flex-col items-start gap-1 max-w-full">
+            <span className={`px-2.5 sm:px-3 py-1.5 rounded-lg select-all max-w-full break-all ${hostContainerClass}`}>
               {renderHostText(host)}
             </span>
             <span className={`text-[10px] uppercase font-bold px-1 ${hostTagClass}`}>
@@ -147,8 +147,8 @@ export default function UrlTokens({ parts, anomalies = [], verdict }) {
 
         {/* Path token */}
         {path && (
-          <div className="flex flex-col items-start gap-1 shrink-0">
-            <span className="px-2.5 py-1.5 rounded-lg bg-slate-900 text-slate-300 text-sm select-all">
+          <div className="flex flex-col items-start gap-1 max-w-full">
+            <span className="px-2.5 py-1.5 rounded-lg bg-slate-900 text-slate-300 text-xs sm:text-sm select-all max-w-full break-all">
               {path}
             </span>
             <span className="text-[10px] uppercase font-bold text-slate-500 px-1">
@@ -159,8 +159,8 @@ export default function UrlTokens({ parts, anomalies = [], verdict }) {
 
         {/* Query token */}
         {query && (
-          <div className="flex flex-col items-start gap-1 max-w-full shrink-0">
-            <span className="px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-slate-300 text-xs sm:text-sm select-all break-all">
+          <div className="flex flex-col items-start gap-1 max-w-full">
+            <span className="px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-slate-300 text-xs sm:text-sm select-all max-w-full break-all">
               {query}
             </span>
             <span className="text-[10px] uppercase font-bold text-slate-400 px-1">
@@ -172,9 +172,9 @@ export default function UrlTokens({ parts, anomalies = [], verdict }) {
 
       {/* Registrable domain callout */}
       {registrableDomain && (
-        <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-          <span className="text-xs sm:text-sm text-slate-300">Registrable domain:</span>
-          <span className={`font-mono text-sm sm:text-base font-bold ${regDomainClass} select-all`}>
+        <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
+          <span className="text-xs sm:text-sm text-slate-300 shrink-0">Registrable domain:</span>
+          <span className={`font-mono text-sm sm:text-base font-bold ${regDomainClass} select-all break-all`}>
             {registrableDomain}
           </span>
         </div>

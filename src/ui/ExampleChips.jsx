@@ -14,16 +14,20 @@ export const SAMPLES = [
     url: 'https://сampus.example/login' // Cyrillic 'с' (U+0441)
   },
   {
-    label: 'IP address',
+    label: 'Public IP',
     url: 'http://192.0.2.45/signin'
+  },
+  {
+    label: 'Private IP',
+    url: 'http://192.168.1.10/'
   },
   {
     label: 'Shortener',
     url: 'https://bit.ly/3abcXYZ'
   },
   {
-    label: 'Complex but safe',
-    url: 'https://portal.campus.example:8443/forms/submit?id=42&contact=lab@campus.example'
+    label: 'Query @ bypass',
+    url: 'https://portal.campus.example:8443/forms?contact=lab@campus.example'
   }
 ];
 

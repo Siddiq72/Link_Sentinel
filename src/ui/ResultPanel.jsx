@@ -12,6 +12,8 @@ export default function ResultPanel({ result }) {
   let tag = 'ANALYSIS';
   if (verdict === 'safe') {
     tag = 'LEGITIMATE';
+  } else if (anomalies.includes('malformed_uri_syntax')) {
+    tag = 'MALFORMED';
   } else if (anomalies.includes('userinfo_decoy')) {
     tag = '@ TRICK';
   } else if (anomalies.includes('homoglyph_cyrillic')) {

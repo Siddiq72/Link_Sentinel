@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { analyze } from '../src/engine/index.js';
+import { SAMPLES } from '../src/ui/ExampleChips.jsx';
 import { parseInput } from '../src/engine/parse.js';
 import { analyzeDomain } from '../src/engine/domain.js';
 import { getSkeleton, hasCyrillic, isMixedScript } from '../src/engine/data/confusables.js';
@@ -128,7 +129,19 @@ describe('Scheme Evaluation Rules', () => {
   it('flags file:, upi:, and mailto: as review', () => {
     expect(analyze('file:///etc/passwd').verdict).toBe('review');
     expect(analyze('upi://pay?pa=test@bank').verdict).toBe('review');
+    expect(analyze('upi://pay?pa=campus@bank').verdict).toBe('review');
     expect(analyze('mailto:admin@campus.example').verdict).toBe('review');
+  });
+
+  it('falls back gracefully to Suspicious: Malformed link for malformed URIs', () => {
+    const malformed1 = analyze('https://::');
+    expect(malformed1.verdict).toBe('suspicious');
+    expect(malformed1.anomalies).toContain('malformed_uri_syntax');
+    expect(malformed1.rules.some((r) => r.id === 'malformed-link')).toBe(true);
+
+    const malformed2 = analyze('https://campus.example:999999');
+    expect(malformed2.verdict).toBe('suspicious');
+    expect(malformed2.anomalies).toContain('malformed_uri_syntax');
   });
 });
 
@@ -179,5 +192,25 @@ describe('Shortener and Obfuscation Rules', () => {
     const hexRes = analyze('http://0x7f000001/admin');
     expect(hexRes.verdict).toBe('suspicious');
     expect(hexRes.anomalies).toContain('raw_ip_host');
+  });
+});
+
+describe('Example Template Chips Presentation Audit', () => {
+  it('contains all 7 presentation slide vectors with correct deterministic verdicts', () => {
+    expect(SAMPLES).toHaveLength(7);
+    const expected = {
+      'Ordinary': 'safe',
+      '@ trick': 'suspicious',
+      'Lookalike': 'suspicious',
+      'Public IP': 'suspicious',
+      'Private IP': 'review',
+      'Shortener': 'review',
+      'Query @ bypass': 'safe'
+    };
+    for (const sample of SAMPLES) {
+      expect(expected[sample.label]).toBeDefined();
+      const res = analyze(sample.url);
+      expect(res.verdict).toBe(expected[sample.label]);
+    }
   });
 });

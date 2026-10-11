@@ -37,7 +37,51 @@ export { evaluateShortenerRule } from './rules/shortenerRule.js';
  * @throws {Error} If input is invalid, empty, or unparseable.
  */
 export function analyze(input) {
-  const parsedContext = parseInput(input);
+  if (input === null || input === undefined || typeof input !== 'string') {
+    throw new Error('Please enter a valid link.');
+  }
+  if (!input.trim()) {
+    throw new Error('Please enter a valid link.');
+  }
+
+  let parsedContext;
+  try {
+    parsedContext = parseInput(input);
+  } catch (err) {
+    if (err.isMalformed) {
+      const trimmed = input.trim();
+      const schemeMatch = trimmed.match(/^([a-zA-Z][a-zA-Z0-9+.-]*):(\/\/)?/);
+      const protocol = schemeMatch ? schemeMatch[0] : 'https://';
+      const remainder = schemeMatch ? trimmed.slice(schemeMatch[0].length) : trimmed;
+      const host = remainder.split(/[/?#]/)[0] || 'malformed-authority';
+
+      return {
+        input: trimmed,
+        verdict: 'suspicious',
+        parts: {
+          protocol,
+          userinfo: '',
+          host,
+          registrableDomain: 'Malformed Link Structure',
+          port: '',
+          path: remainder.includes('/') ? '/' + remainder.slice(remainder.indexOf('/') + 1) : '',
+          query: remainder.includes('?') ? '?' + remainder.split('?')[1] : ''
+        },
+        anomalies: ['malformed_uri_syntax'],
+        rules: [
+          {
+            id: 'malformed-link',
+            name: 'Malformed Link Syntax',
+            severity: 'suspicious',
+            reason: 'Flagged: URI structure violates RFC/WHATWG specifications (e.g. invalid IPv6 brackets, corrupt port number, or illegal authority syntax).'
+          }
+        ],
+        passedRules: []
+      };
+    }
+    throw err;
+  }
+
   const { url, rawInput, hasBidi, hasBackslash, hasZeroWidth } = parsedContext;
 
   const domainInfo = analyzeDomain(url.hostname);

@@ -21,9 +21,10 @@ export default function Header() {
         </div>
 
         {/* Right: Privacy Pill Badge */}
-        <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-950/40 border border-emerald-500/30 text-emerald-300 text-xs sm:text-sm font-medium shrink-0">
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-950/40 border border-emerald-500/30 text-emerald-300 text-xs sm:text-sm font-medium shrink-0">
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" aria-hidden="true"></span>
-          <span>Zero network requests during analysis</span>
+          <span className="hidden sm:inline">Zero network requests during analysis</span>
+          <span className="inline sm:hidden">Zero network</span>
         </div>
       </div>
     </header>

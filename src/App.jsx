@@ -49,10 +49,7 @@ export default function App() {
     const targetUrl = typeof urlToAnalyze === 'string' ? urlToAnalyze.trim() : inputVal.trim();
 
     if (!targetUrl) {
-      setErrorMessage('Please enter a valid link.');
-      setErrorType('link');
-      setStatus('error');
-      setResultData(null);
+      handleClear();
       return;
     }
 
