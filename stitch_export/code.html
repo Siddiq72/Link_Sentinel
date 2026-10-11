@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>LINK SENTINEL - Explainable Link &amp; QR Risk Screener</title>
+<style>
+    @layer base {
+      html, body { margin: 0; padding: 0; }
+      body { overscroll-behavior: none; }
+    }
+    ::-webkit-scrollbar { display: none; }
+  </style>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "background": "#070d18",
+            "surface": "#0c1729",
+            "surface-container": "#111f36",
+            "surface-container-high": "#182844",
+            "surface-container-highest": "#213454",
+            "surface-container-low": "#0b1424",
+            "surface-container-lowest": "#060b14",
+            "primary": "#c3f5ff",
+            "primary-container": "#00e5ff",
+            "on-primary-container": "#003b44",
+            "on-surface": "#e2e8f0",
+            "on-surface-variant": "#94a3b8",
+            "outline": "#475569",
+            "outline-variant": "#1e293b",
+            "tertiary": "#34d399",
+            "error": "#f87171",
+            "error-container": "#450a0a"
+          },
+          fontFamily: {
+            sans: ['-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif'],
+            mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', '"Liberation Mono"', 'monospace']
+          }
+        }
+      }
+    };
+  </script>
+</head>
+<body class="bg-[#070d18] font-sans text-on-surface min-h-screen flex flex-col justify-between selection:bg-primary-container selection:text-on-primary-container">
+<!-- Top Header Bar -->
+<header class="w-full border-b border-slate-800/80 bg-[#070d18]/90 backdrop-blur-md sticky top-0 z-50">
+<div class="max-w-[1280px] mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
+<!-- Left: Logo & Identity -->
+<div class="flex items-center gap-3.5">
+<div class="w-11 h-11 rounded-xl bg-surface-container flex items-center justify-center text-primary-container border border-cyan-500/20 shadow-[0_0_16px_rgba(0,229,255,0.15)]">
+<svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24">
+<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+<rect height="5" rx="1" width="6" x="9" y="9"></rect>
+<path d="M10 9V7a2 2 0 1 1 4 0v2"></path>
+</svg>
+</div>
+<div class="flex flex-col">
+<span class="text-base sm:text-lg font-extrabold uppercase tracking-wider text-primary">LINK SENTINEL</span>
+<span class="text-xs sm:text-sm text-on-surface-variant font-normal">Explainable link &amp; QR risk screener</span>
+</div>
+</div>
+<!-- Right: Privacy Pill Badge -->
+<div class="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-950/40 border border-emerald-500/30 text-emerald-300 text-xs sm:text-sm font-medium">
+<span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+<span>Zero network requests during analysis</span>
+</div>
+</div>
+</header>
+<!-- Main 2-Column Application Layout -->
+<main class="w-full flex-1 max-w-[1280px] mx-auto px-4 sm:px-6 py-8">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+<!-- LEFT COLUMN: Input Section -->
+<section class="lg:col-span-5 flex flex-col gap-6">
+<div class="bg-[#0c1729] border border-cyan-500/20 shadow-2xl rounded-2xl p-6 flex flex-col gap-5 backdrop-blur-xl">
+<div class="flex items-center justify-between">
+<label class="text-sm font-bold text-on-surface uppercase tracking-wider flex items-center gap-2" for="url-input">
+<svg class="w-4 h-4 text-primary-container" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24">
+<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+<path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+</svg>
+              Link Inspector Input
+            </label>
+<button class="text-xs font-mono text-on-surface-variant hover:text-primary transition-colors flex items-center gap-1 min-h-[36px] px-2" onclick="clearInput()" type="button">
+<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24">
+<line x1="18" x2="6" y1="6" y2="18"></line>
+<line x1="6" x2="18" y1="6" y2="18"></line>
+</svg>
+              Clear
+            </button>
+</div>
+<!-- URL Input Bar + Cyan Analyze Button -->
+<div class="flex flex-col sm:flex-row gap-2.5">
+<div class="relative flex-1">
+<input class="w-full min-h-[48px] bg-slate-900/90 text-on-surface font-mono text-sm px-4 rounded-xl border border-slate-700/60 focus:outline-none focus:border-primary-container focus:ring-2 focus:ring-primary-container/20 transition-all placeholder:text-slate-500" id="url-input" onkeydown="if(event.key==='Enter') executeAnalysis()" placeholder="Paste a link to inspect" type="text" value=""/>
+</div>
+<button class="min-h-[48px] px-6 rounded-xl bg-primary-container text-on-primary-container font-extrabold text-sm uppercase tracking-wider shadow-[0_0_18px_rgba(0,229,255,0.25)] hover:shadow-[0_0_24px_rgba(0,229,255,0.4)] active:scale-[0.98] transition-all flex items-center justify-center gap-2 shrink-0 cursor-pointer" id="btn-analyze" onclick="executeAnalysis()" type="button">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" viewbox="0 0 24 24">
+<circle cx="11" cy="11" r="8"></circle>
+<line x1="21" x2="16.65" y1="21" y2="16.65"></line>
+</svg>
+              ANALYZE
+            </button>
+</div>
+<!-- Dashed outline QR image upload box -->
+<div class="group cursor-pointer border-2 border-dashed border-slate-700 hover:border-primary-container/70 rounded-xl p-4 bg-slate-950/40 hover:bg-slate-900/60 transition-all flex items-center gap-4 text-left min-h-[72px]" onclick="triggerQrClick()">
+<div class="w-11 h-11 rounded-lg bg-surface-container flex items-center justify-center text-primary-container group-hover:scale-105 transition-transform shrink-0 border border-slate-700/50">
+<svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" viewbox="0 0 24 24">
+<rect height="7" width="7" x="3" y="3"></rect>
+<rect height="7" width="7" x="14" y="3"></rect>
+<rect height="7" width="7" x="14" y="14"></rect>
+<rect height="7" width="7" x="3" y="14"></rect>
+<line x1="7" x2="7.01" y1="7" y2="7"></line>
+<line x1="17" x2="17.01" y1="7" y2="7"></line>
+<line x1="7" x2="7.01" y1="17" y2="17"></line>
+<line x1="17" x2="17.01" y1="17" y2="17"></line>
+</svg>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="text-sm font-bold text-on-surface group-hover:text-primary transition-colors">
+                Upload a QR image
+              </span>
+<span class="text-xs text-on-surface-variant truncate">
+                Drag &amp; drop or browse image for client-side barcode decode
+              </span>
+</div>
+</div>
+<!-- Privacy note with lock icon -->
+<div class="flex items-center gap-2.5 px-3.5 py-3 rounded-lg bg-slate-900/60 border border-slate-800 text-slate-300 text-sm">
+<svg class="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24">
+<rect height="11" rx="2" ry="2" width="18" x="3" y="11"></rect>
+<path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+</svg>
+<span>Your link is analyzed on this device and is never opened.</span>
+</div>
+<!-- Interactive example chips (wraps on desktop, scrolls on mobile) -->
+<div class="flex flex-col gap-2 pt-1">
+<span class="text-xs font-mono uppercase text-slate-400 font-semibold tracking-wider">Example Templates:</span>
+<div class="flex flex-wrap items-center gap-2 overflow-x-auto pb-1" role="toolbar">
+<button class="min-h-[44px] px-3.5 py-2 rounded-lg bg-surface-container text-on-surface hover:bg-surface-container-high hover:text-primary transition-all text-xs font-mono shrink-0 border border-slate-700/60 active:scale-95" onclick="selectChip('ordinary')" type="button">
+                Ordinary
+              </button>
+<button class="min-h-[44px] px-3.5 py-2 rounded-lg bg-surface-container text-on-surface hover:bg-surface-container-high hover:text-primary transition-all text-xs font-mono shrink-0 border border-slate-700/60 active:scale-95" onclick="loadState('B')" type="button">
+                @ trick
+              </button>
+<button class="min-h-[44px] px-3.5 py-2 rounded-lg bg-surface-container text-on-surface hover:bg-surface-container-high hover:text-primary transition-all text-xs font-mono shrink-0 border border-slate-700/60 active:scale-95" onclick="loadState('C')" type="button">
+                Lookalike
+              </button>
+<button class="min-h-[44px] px-3.5 py-2 rounded-lg bg-surface-container text-on-surface hover:bg-surface-container-high hover:text-primary transition-all text-xs font-mono shrink-0 border border-slate-700/60 active:scale-95" onclick="selectChip('ip_address')" type="button">
+                IP address
+              </button>
+<button class="min-h-[44px] px-3.5 py-2 rounded-lg bg-surface-container text-on-surface hover:bg-surface-container-high hover:text-primary transition-all text-xs font-mono shrink-0 border border-slate-700/60 active:scale-95" onclick="loadState('D')" type="button">
+                Shortener
+              </button>
+<button class="min-h-[44px] px-3.5 py-2 rounded-lg bg-surface-container text-on-surface hover:bg-surface-container-high hover:text-primary transition-all text-xs font-mono shrink-0 border border-slate-700/60 active:scale-95" onclick="loadState('E')" type="button">
+                Complex but safe
+              </button>
+</div>
+</div>
+<!-- Short helper note replacing RFC-3986 -->
+<div class="p-3.5 rounded-xl bg-slate-900/40 border border-slate-800 text-slate-300 text-sm flex items-start gap-2.5">
+<svg class="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24">
+<circle cx="12" cy="12" r="10"></circle>
+<line x1="12" x2="12" y1="16" y2="12"></line>
+<line x1="12" x2="12.01" y1="8" y2="8"></line>
+</svg>
+<p class="leading-relaxed">
+              The real host is whatever comes after the last <span class="font-mono text-cyan-300 font-bold">@</span> in the link's authority. Link Sentinel highlights it for you.
+            </p>
+</div>
+</div>
+</section>
+<!-- RIGHT COLUMN: Result Area -->
+<section class="lg:col-span-7 flex flex-col gap-4">
+<!-- Interactive State Switcher / Tab Selector -->
+<div class="flex items-center gap-1.5 p-1.5 rounded-xl bg-[#0c1729] border border-slate-800 overflow-x-auto text-xs font-mono">
+<button class="tab-btn min-h-[44px] px-3 py-2 rounded-lg font-semibold shrink-0 transition-all bg-primary-container text-on-primary-container shadow-md" id="tab-A" onclick="loadState('A')" type="button">
+            Empty / Ready
+          </button>
+<button class="tab-btn min-h-[44px] px-3 py-2 rounded-lg font-semibold shrink-0 transition-all text-slate-400 hover:text-on-surface hover:bg-slate-800/60" id="tab-B" onclick="loadState('B')" type="button">
+            SUSPICIOUS (@ trick)
+          </button>
+<button class="tab-btn min-h-[44px] px-3 py-2 rounded-lg font-semibold shrink-0 transition-all text-slate-400 hover:text-on-surface hover:bg-slate-800/60" id="tab-C" onclick="loadState('C')" type="button">
+            SUSPICIOUS (Lookalike)
+          </button>
+<button class="tab-btn min-h-[44px] px-3 py-2 rounded-lg font-semibold shrink-0 transition-all text-slate-400 hover:text-on-surface hover:bg-slate-800/60" id="tab-D" onclick="loadState('D')" type="button">
+            REVIEW NEEDED (Shortener)
+          </button>
+<button class="tab-btn min-h-[44px] px-3 py-2 rounded-lg font-semibold shrink-0 transition-all text-slate-400 hover:text-on-surface hover:bg-slate-800/60" id="tab-E" onclick="loadState('E')" type="button">
+            SAFE (Complex)
+          </button>
+<button class="tab-btn min-h-[44px] px-3 py-2 rounded-lg font-semibold shrink-0 transition-all text-slate-400 hover:text-on-surface hover:bg-slate-800/60" id="tab-F" onclick="loadState('F')" type="button">
+            Input / QR Error
+          </button>
+</div>
+<!-- STATE DISPLAY CONTAINER -->
+<div id="state-display-container">
+<!-- Dynamically populated or toggled via JS -->
+</div>
+</section>
+</div>
+</main>
+<!-- Clean Single-Line Footer -->
+<footer class="w-full border-t border-slate-800/80 bg-[#060b14] py-6 px-4 sm:px-6 mt-12 text-center">
+<p class="max-w-[1140px] mx-auto text-xs sm:text-sm text-slate-400 font-normal leading-relaxed">
+      Detects structural deception in the link text. It does not judge domain reputation, compromised sites or where a shortened link leads.
+    </p>
+</footer>
+<script>
+    const STATES = {
+      'A': {
+        type: 'EMPTY',
+        url: ''
+      },
+      'B': {
+        type: 'SUSPICIOUS_AT',
+        url: 'https://campus.example@other.example/login',
+        verdict: 'SUSPICIOUS',
+        domain: 'other.example',
+        reason: 'Flagged: the text before @ looks like a website, but the real host is other.example.'
+      },
+      'C': {
+        type: 'SUSPICIOUS_LOOKALIKE',
+        url: 'https://cаmpus.example/portal',
+        verdict: 'SUSPICIOUS',
+        domain: 'cаmpus.example',
+        reason: 'Flagged: this domain uses a look-alike character and imitates campus.example.'
+      },
+      'D': {
+        type: 'REVIEW',
+        url: 'https://bit.ly/3abcXYZ',
+        verdict: 'REVIEW NEEDED',
+        domain: 'bit.ly',
+        reason: 'Shortened link: the real destination is hidden and cannot be checked offline.'
+      },
+      'E': {
+        type: 'SAFE',
+        url: 'https://portal.campus.example:8443/forms/submit?id=42&contact=lab@campus.example',
+        verdict: 'SAFE',
+        domain: 'campus.example',
+        subline: 'No deception signals found. This is not a guarantee.',
+        reason: 'The @ appears in the query, so it is not a login trick.'
+      },
+      'F': {
+        type: 'ERROR',
+        url: 'bad_input'
+      }
+    };
+
+    let currentStateKey = 'A';
+    let passedChecksOpen = false;
+
+    function loadState(key) {
+      currentStateKey = key;
+      const st = STATES[key];
+
+      // Update switcher active styling
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.className = 'tab-btn min-h-[44px] px-3 py-2 rounded-lg font-semibold shrink-0 transition-all text-slate-400 hover:text-on-surface hover:bg-slate-800/60';
+      });
+      const activeTab = document.getElementById('tab-' + key);
+      if (activeTab) {
+        activeTab.className = 'tab-btn min-h-[44px] px-3 py-2 rounded-lg font-semibold shrink-0 transition-all bg-primary-container text-on-primary-container shadow-md';
+      }
+
+      // Sync input field
+      const input = document.getElementById('url-input');
+      input.value = st.url;
+
+      renderState(key, st);
+    }
+
+    function renderState(key, data) {
+      const container = document.getElementById('state-display-container');
+
+      // STATE A: Empty / Ready
+      if (key === 'A') {
+        container.innerHTML = `
+          <div class="bg-[#0c1729] border border-cyan-500/20 shadow-2xl rounded-2xl p-8 sm:p-12 text-center flex flex-col items-center justify-center gap-5 min-h-[440px]">
+            <div class="w-16 h-16 rounded-2xl bg-surface-container flex items-center justify-center text-primary-container shadow-[0_0_24px_rgba(0,229,255,0.2)] border border-cyan-500/30">
+              <svg class="w-9 h-9" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" viewBox="0 0 24 24">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                <circle cx="12" cy="11" r="1"></circle>
+              </svg>
+            </div>
+            <div class="flex flex-col gap-2 max-w-md">
+              <h2 class="text-xl sm:text-2xl font-bold text-on-surface">Awaiting Link or QR Input</h2>
+              <p class="text-sm text-slate-400 leading-relaxed">
+                Paste a URL in the inspector or click an example above to inspect its anatomy and routing traps.
+              </p>
+            </div>
+            <div class="flex flex-wrap items-center justify-center gap-2 mt-2">
+              <button class="min-h-[44px] px-4 py-2 rounded-lg bg-surface-container hover:bg-surface-container-high text-primary text-xs font-mono transition-all border border-slate-700" onclick="loadState('B')" type="button">
+                Try: @ Trick Decoy
+              </button>
+              <button class="min-h-[44px] px-4 py-2 rounded-lg bg-surface-container hover:bg-surface-container-high text-primary text-xs font-mono transition-all border border-slate-700" onclick="loadState('C')" type="button">
+                Try: Cyrillic Lookalike
+              </button>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      // STATE F: Error State
+      if (key === 'F') {
+        container.innerHTML = `
+          <div class="flex flex-col gap-5">
+            <!-- Amber/Red Warning Banner -->
+            <div class="rounded-2xl p-5 bg-gradient-to-r from-red-950/80 to-amber-950/70 border-2 border-red-500/80 shadow-[0_0_32px_rgba(239,68,68,0.25)] flex items-center gap-4">
+              <div class="w-12 h-12 rounded-xl bg-red-900/50 flex items-center justify-center text-red-400 shadow-[0_0_16px_rgba(239,68,68,0.3)] shrink-0 border border-red-500/40">
+                <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24">
+                  <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
+                  <line x1="12" y1="9" x2="12" y2="13"></line>
+                  <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+              </div>
+              <div class="flex flex-col">
+                <span class="text-xs uppercase font-mono tracking-wider text-red-400 font-bold">Input Error</span>
+                <h2 class="text-2xl font-extrabold text-red-300 tracking-tight">ANALYSIS INTERRUPTED</h2>
+              </div>
+            </div>
+
+            <!-- Error Details Card -->
+            <div class="bg-[#0c1729] border border-red-500/30 rounded-2xl p-6 flex flex-col gap-4 shadow-xl">
+              <div class="flex items-start gap-3 p-4 rounded-xl bg-slate-950/70 border border-red-500/30 text-slate-200">
+                <svg class="w-5 h-5 text-red-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="15" x2="9" y1="9" y2="15"></line>
+                  <line x1="9" x2="15" y1="9" y2="15"></line>
+                </svg>
+                <div class="flex flex-col gap-1">
+                  <span class="font-bold text-sm text-red-400">Invalid or empty link syntax</span>
+                  <span class="text-xs text-slate-400">The provided string does not contain an inspectable protocol authority or domain structure.</span>
+                </div>
+              </div>
+
+              <div class="flex items-start gap-3 p-4 rounded-xl bg-slate-950/70 border border-amber-500/30 text-slate-200">
+                <svg class="w-5 h-5 text-amber-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
+                  <rect height="7" width="7" x="3" y="3"></rect>
+                  <rect height="7" width="7" x="14" y="3"></rect>
+                  <rect height="7" width="7" x="14" y="14"></rect>
+                  <rect height="7" width="7" x="3" y="14"></rect>
+                </svg>
+                <div class="flex flex-col gap-1">
+                  <span class="font-bold text-sm text-amber-400">No QR code found in this image. Please upload a clear QR code image.</span>
+                  <span class="text-xs text-slate-400">Zero matrix barcodes detected in buffer. Ensure good contrast and uncropped corner finder patterns.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      // STATE B: SUSPICIOUS (@ trick)
+      if (key === 'B') {
+        container.innerHTML = `
+          <div class="flex flex-col gap-5">
+            <!-- Red Banner with shield-alert -->
+            <div class="rounded-2xl p-5 bg-[#26080b] border-2 border-red-500 shadow-[0_0_36px_rgba(239,68,68,0.35)] flex items-center justify-between">
+              <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-xl bg-red-950/80 border border-red-500/50 flex items-center justify-center text-red-400 shadow-[0_0_20px_rgba(239,68,68,0.3)] animate-pulse shrink-0">
+                  <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    <line x1="12" x2="12" y1="8" y2="12"></line>
+                    <line x1="12" x2="12.01" y1="16" y2="16"></line>
+                  </svg>
+                </div>
+                <div class="flex flex-col">
+                  <span class="text-xs font-mono uppercase text-red-400 font-bold tracking-wider">Deception Detected</span>
+                  <h2 class="text-2xl sm:text-3xl font-extrabold text-red-500 tracking-tight">SUSPICIOUS</h2>
+                </div>
+              </div>
+              <span class="px-3 py-1 rounded bg-red-950 border border-red-500/40 text-red-400 text-xs font-mono font-bold">@ TRICK</span>
+            </div>
+
+            <!-- URL Anatomy Breakdown -->
+            <div class="bg-[#0c1729] border border-cyan-500/20 shadow-2xl rounded-2xl p-6 flex flex-col gap-4 backdrop-blur-xl">
+              <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <span class="text-xs uppercase font-mono tracking-wider font-bold text-primary flex items-center gap-2">
+                  <svg class="w-4 h-4 text-primary-container" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
+                    <polyline points="4 7 4 4 20 4 20 7"></polyline>
+                    <line x1="9" x2="15" y1="20" y2="20"></line>
+                    <line x1="12" x2="12" y1="4" y2="20"></line>
+                  </svg>
+                  URL Anatomy Breakdown
+                </span>
+                <span class="text-xs font-mono text-slate-400">Analyzed Link</span>
+              </div>
+
+              <div class="bg-slate-950 p-4 rounded-xl flex flex-wrap items-end gap-x-2 gap-y-3 font-mono border border-slate-800 overflow-x-auto">
+                <!-- Protocol -->
+                <div class="flex flex-col items-start gap-1">
+                  <span class="px-2.5 py-1.5 rounded-lg bg-slate-900 text-slate-300 text-sm">https://</span>
+                  <span class="text-[10px] uppercase font-bold text-slate-500 px-1">Protocol</span>
+                </div>
+                <!-- Userinfo (RED, DECOY) -->
+                <div class="flex flex-col items-start gap-1">
+                  <span class="px-2.5 py-1.5 rounded-lg bg-red-950/80 border-2 border-red-500 text-red-300 text-sm font-bold shadow-[0_0_14px_rgba(239,68,68,0.3)]">campus.example@</span>
+                  <span class="text-[10px] uppercase font-bold text-red-400 px-1">DECOY (Userinfo)</span>
+                </div>
+                <!-- Host (GREEN glowing outline, REAL HOST) -->
+                <div class="flex flex-col items-start gap-1">
+                  <span class="px-3 py-1.5 rounded-lg bg-emerald-950/80 border-2 border-emerald-400 text-emerald-300 text-sm font-bold shadow-[0_0_20px_rgba(52,211,153,0.4)]">other.example</span>
+                  <span class="text-[10px] uppercase font-bold text-emerald-400 px-1">REAL HOST</span>
+                </div>
+                <!-- Path -->
+                <div class="flex flex-col items-start gap-1">
+                  <span class="px-2.5 py-1.5 rounded-lg bg-slate-900 text-slate-300 text-sm">/login</span>
+                  <span class="text-[10px] uppercase font-bold text-slate-500 px-1">Path</span>
+                </div>
+              </div>
+
+              <!-- Registrable domain callout -->
+              <div class="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 flex items-center justify-between">
+                <span class="text-xs sm:text-sm text-slate-300">Registrable domain:</span>
+                <span class="font-mono text-sm sm:text-base font-bold text-emerald-300">other.example</span>
+              </div>
+            </div>
+
+            <!-- Reason Card -->
+            <div class="bg-[#0c1729] border border-cyan-500/20 shadow-xl rounded-2xl p-6 flex flex-col gap-3">
+              <div class="flex items-center justify-between">
+                <span class="text-sm font-bold text-on-surface">Authority Routing Trap</span>
+                <span class="px-2.5 py-0.5 rounded text-xs font-mono font-bold bg-red-950 border border-red-500/50 text-red-400">Suspicious</span>
+              </div>
+              <p class="text-sm text-slate-300 leading-relaxed">
+                Flagged: the text before @ looks like a website, but the real host is other.example.
+              </p>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      // STATE C: SUSPICIOUS (Cyrillic lookalike)
+      if (key === 'C') {
+        container.innerHTML = `
+          <div class="flex flex-col gap-5">
+            <!-- Red Banner with shield-alert -->
+            <div class="rounded-2xl p-5 bg-[#26080b] border-2 border-red-500 shadow-[0_0_36px_rgba(239,68,68,0.35)] flex items-center justify-between">
+              <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-xl bg-red-950/80 border border-red-500/50 flex items-center justify-center text-red-400 shadow-[0_0_20px_rgba(239,68,68,0.3)] animate-pulse shrink-0">
+                  <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    <line x1="12" x2="12" y1="8" y2="12"></line>
+                    <line x1="12" x2="12.01" y1="16" y2="16"></line>
+                  </svg>
+                </div>
+                <div class="flex flex-col">
+                  <span class="text-xs font-mono uppercase text-red-400 font-bold tracking-wider">Homoglyph Spoofing</span>
+                  <h2 class="text-2xl sm:text-3xl font-extrabold text-red-500 tracking-tight">SUSPICIOUS</h2>
+                </div>
+              </div>
+              <span class="px-3 py-1 rounded bg-red-950 border border-red-500/40 text-red-400 text-xs font-mono font-bold">LOOKALIKE</span>
+            </div>
+
+            <!-- URL Anatomy Breakdown -->
+            <div class="bg-[#0c1729] border border-cyan-500/20 shadow-2xl rounded-2xl p-6 flex flex-col gap-4 backdrop-blur-xl">
+              <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <span class="text-xs uppercase font-mono tracking-wider font-bold text-primary flex items-center gap-2">
+                  <svg class="w-4 h-4 text-primary-container" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
+                    <polyline points="4 7 4 4 20 4 20 7"></polyline>
+                    <line x1="9" x2="15" y1="20" y2="20"></line>
+                    <line x1="12" x2="12" y1="4" y2="20"></line>
+                  </svg>
+                  URL Anatomy Breakdown
+                </span>
+                <span class="text-xs font-mono text-slate-400">Analyzed Link</span>
+              </div>
+
+              <div class="bg-slate-950 p-4 rounded-xl flex flex-wrap items-end gap-x-2 gap-y-3 font-mono border border-slate-800 overflow-x-auto">
+                <!-- Protocol -->
+                <div class="flex flex-col items-start gap-1">
+                  <span class="px-2.5 py-1.5 rounded-lg bg-slate-900 text-slate-300 text-sm">https://</span>
+                  <span class="text-[10px] uppercase font-bold text-slate-500 px-1">Protocol</span>
+                </div>
+                <!-- Cyrillic Lookalike Host -->
+                <div class="flex flex-col items-start gap-1">
+                  <span class="px-3 py-1.5 rounded-lg bg-red-950/80 border-2 border-red-500 text-sm font-bold shadow-[0_0_16px_rgba(239,68,68,0.3)]">
+                    <span class="text-red-400 bg-red-900/90 px-1 rounded inline-block animate-pulse">с</span><span class="text-slate-200">ampus.example</span>
+                  </span>
+                  <span class="text-[10px] uppercase font-bold text-red-400 px-1">CYRILLIC 'с' (U+0441)</span>
+                </div>
+                <!-- Path -->
+                <div class="flex flex-col items-start gap-1">
+                  <span class="px-2.5 py-1.5 rounded-lg bg-slate-900 text-slate-300 text-sm">/portal</span>
+                  <span class="text-[10px] uppercase font-bold text-slate-500 px-1">Path</span>
+                </div>
+              </div>
+
+              <!-- Registrable domain callout -->
+              <div class="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 flex items-center justify-between">
+                <span class="text-xs sm:text-sm text-slate-300">Registrable domain:</span>
+                <span class="font-mono text-sm sm:text-base font-bold text-red-400">cаmpus.example (Punycode: xn--mpus-43d.example)</span>
+              </div>
+            </div>
+
+            <!-- Reason Card -->
+            <div class="bg-[#0c1729] border border-cyan-500/20 shadow-xl rounded-2xl p-6 flex flex-col gap-3">
+              <div class="flex items-center justify-between">
+                <span class="text-sm font-bold text-on-surface">Character Substitution</span>
+                <span class="px-2.5 py-0.5 rounded text-xs font-mono font-bold bg-red-950 border border-red-500/50 text-red-400">Suspicious</span>
+              </div>
+              <p class="text-sm text-slate-300 leading-relaxed">
+                Flagged: this domain uses a look-alike character and imitates campus.example.
+              </p>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      // STATE D: REVIEW NEEDED (Shortener)
+      if (key === 'D') {
+        container.innerHTML = `
+          <div class="flex flex-col gap-5">
+            <!-- Amber Banner with alert-triangle icon -->
+            <div class="rounded-2xl p-5 bg-[#2b1f06] border-2 border-amber-500 shadow-[0_0_32px_rgba(245,158,11,0.25)] flex items-center justify-between">
+              <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-xl bg-amber-950/80 border border-amber-500/50 flex items-center justify-center text-amber-400 shadow-[0_0_16px_rgba(245,158,11,0.3)] shrink-0">
+                  <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24">
+                    <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
+                    <line x1="12" y1="9" x2="12" y2="13"></line>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                  </svg>
+                </div>
+                <div class="flex flex-col">
+                  <span class="text-xs font-mono uppercase text-amber-400 font-bold tracking-wider">Caution Required</span>
+                  <h2 class="text-2xl sm:text-3xl font-extrabold text-amber-400 tracking-tight">REVIEW NEEDED</h2>
+                </div>
+              </div>
+              <span class="px-3 py-1 rounded bg-amber-950 border border-amber-500/40 text-amber-300 text-xs font-mono font-bold">SHORTENER</span>
+            </div>
+
+            <!-- URL Anatomy Breakdown -->
+            <div class="bg-[#0c1729] border border-cyan-500/20 shadow-2xl rounded-2xl p-6 flex flex-col gap-4 backdrop-blur-xl">
+              <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <span class="text-xs uppercase font-mono tracking-wider font-bold text-primary flex items-center gap-2">
+                  <svg class="w-4 h-4 text-primary-container" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
+                    <polyline points="4 7 4 4 20 4 20 7"></polyline>
+                    <line x1="9" x2="15" y1="20" y2="20"></line>
+                    <line x1="12" x2="12" y1="4" y2="20"></line>
+                  </svg>
+                  URL Anatomy Breakdown
+                </span>
+                <span class="text-xs font-mono text-slate-400">Analyzed Link</span>
+              </div>
+
+              <div class="bg-slate-950 p-4 rounded-xl flex flex-wrap items-end gap-x-2 gap-y-3 font-mono border border-slate-800 overflow-x-auto">
+                <div class="flex flex-col items-start gap-1">
+                  <span class="px-2.5 py-1.5 rounded-lg bg-slate-900 text-slate-300 text-sm">https://</span>
+                  <span class="text-[10px] uppercase font-bold text-slate-500 px-1">Protocol</span>
+                </div>
+                <div class="flex flex-col items-start gap-1">
+                  <span class="px-3 py-1.5 rounded-lg bg-amber-950/70 border border-amber-400 text-amber-200 text-sm font-bold">bit.ly</span>
+                  <span class="text-[10px] uppercase font-bold text-amber-400 px-1">Redirection Host</span>
+                </div>
+                <div class="flex flex-col items-start gap-1">
+                  <span class="px-2.5 py-1.5 rounded-lg bg-slate-900 text-slate-300 text-sm">/3abcXYZ</span>
+                  <span class="text-[10px] uppercase font-bold text-slate-500 px-1">Short Path</span>
+                </div>
+              </div>
+
+              <div class="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 flex items-center justify-between">
+                <span class="text-xs sm:text-sm text-slate-300">Registrable domain:</span>
+                <span class="font-mono text-sm sm:text-base font-bold text-amber-300">bit.ly</span>
+              </div>
+            </div>
+
+            <!-- Reason Card -->
+            <div class="bg-[#0c1729] border border-cyan-500/20 shadow-xl rounded-2xl p-6 flex flex-col gap-3">
+              <div class="flex items-center justify-between">
+                <span class="text-sm font-bold text-on-surface">Destination Obfuscation</span>
+                <span class="px-2.5 py-0.5 rounded text-xs font-mono font-bold bg-amber-950 border border-amber-500/50 text-amber-300">Review</span>
+              </div>
+              <p class="text-sm text-slate-300 leading-relaxed">
+                Shortened link: the real destination is hidden and cannot be checked offline.
+              </p>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      // STATE E: SAFE (Complex but safe)
+      if (key === 'E') {
+        container.innerHTML = `
+          <div class="flex flex-col gap-5">
+            <!-- Emerald green SAFE banner with check-shield -->
+            <div class="rounded-2xl p-5 bg-[#06241a] border-2 border-emerald-500 shadow-[0_0_32px_rgba(16,185,129,0.25)] flex flex-col gap-3">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                  <div class="w-12 h-12 rounded-xl bg-emerald-950/80 border border-emerald-500/50 flex items-center justify-center text-emerald-400 shadow-[0_0_16px_rgba(16,185,129,0.3)] shrink-0">
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24">
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                      <polyline points="9 12 11 14 15 10"></polyline>
+                    </svg>
+                  </div>
+                  <div class="flex flex-col">
+                    <span class="text-xs font-mono uppercase text-emerald-400 font-bold tracking-wider">Analysis Cleared</span>
+                    <h2 class="text-2xl sm:text-3xl font-extrabold text-emerald-400 tracking-tight">SAFE</h2>
+                  </div>
+                </div>
+                <span class="px-3 py-1 rounded bg-emerald-950 border border-emerald-500/40 text-emerald-300 text-xs font-mono font-bold">LEGITIMATE</span>
+              </div>
+              <p class="text-xs sm:text-sm text-slate-300 border-t border-emerald-900/60 pt-2.5">
+                No deception signals found. This is not a guarantee.
+              </p>
+            </div>
+
+            <!-- URL Anatomy Breakdown with Port and Query Tokens -->
+            <div class="bg-[#0c1729] border border-cyan-500/20 shadow-2xl rounded-2xl p-6 flex flex-col gap-4 backdrop-blur-xl">
+              <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <span class="text-xs uppercase font-mono tracking-wider font-bold text-primary flex items-center gap-2">
+                  <svg class="w-4 h-4 text-primary-container" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
+                    <polyline points="4 7 4 4 20 4 20 7"></polyline>
+                    <line x1="9" x2="15" y1="20" y2="20"></line>
+                    <line x1="12" x2="12" y1="4" y2="20"></line>
+                  </svg>
+                  URL Anatomy Breakdown
+                </span>
+                <span class="text-xs font-mono text-slate-400">Analyzed Link</span>
+              </div>
+
+              <div class="bg-slate-950 p-4 rounded-xl flex flex-wrap items-end gap-x-2 gap-y-3 font-mono border border-slate-800 overflow-x-auto">
+                <div class="flex flex-col items-start gap-1">
+                  <span class="px-2 py-1 rounded-lg bg-slate-900 text-slate-300 text-xs sm:text-sm">https://</span>
+                  <span class="text-[10px] uppercase font-bold text-slate-500 px-1">Protocol</span>
+                </div>
+                <div class="flex flex-col items-start gap-1">
+                  <span class="px-2.5 py-1 rounded-lg bg-emerald-950 border border-emerald-500 text-emerald-300 text-xs sm:text-sm font-bold">portal.campus.example</span>
+                  <span class="text-[10px] uppercase font-bold text-emerald-400 px-1">Host</span>
+                </div>
+                <!-- Port 8443 token -->
+                <div class="flex flex-col items-start gap-1">
+                  <span class="px-2 py-1 rounded-lg bg-cyan-950/80 border border-cyan-500/60 text-cyan-300 text-xs sm:text-sm font-bold">:8443</span>
+                  <span class="text-[10px] uppercase font-bold text-cyan-400 px-1">Port</span>
+                </div>
+                <div class="flex flex-col items-start gap-1">
+                  <span class="px-2 py-1 rounded-lg bg-slate-900 text-slate-300 text-xs sm:text-sm">/forms/submit</span>
+                  <span class="text-[10px] uppercase font-bold text-slate-500 px-1">Path</span>
+                </div>
+                <!-- Query Tokens clearly displayed -->
+                <div class="flex flex-col items-start gap-1 max-w-full">
+                  <span class="px-2 py-1 rounded-lg bg-slate-900 border border-slate-700 text-slate-300 text-xs sm:text-sm truncate">?id=42&amp;contact=lab@campus.example</span>
+                  <span class="text-[10px] uppercase font-bold text-slate-400 px-1">Query (?param)</span>
+                </div>
+              </div>
+
+              <div class="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 flex items-center justify-between">
+                <span class="text-xs sm:text-sm text-slate-300">Registrable domain:</span>
+                <span class="font-mono text-sm sm:text-base font-bold text-emerald-300">campus.example</span>
+              </div>
+            </div>
+
+            <!-- Reason Card (Severity Note) + Collapsed Passed Checks Card -->
+            <div class="bg-[#0c1729] border border-cyan-500/20 shadow-xl rounded-2xl p-6 flex flex-col gap-4">
+              <div class="flex items-center justify-between">
+                <span class="text-sm font-bold text-on-surface">Parameter Context Check</span>
+                <span class="px-2.5 py-0.5 rounded text-xs font-mono font-bold bg-cyan-950 border border-cyan-500/40 text-cyan-300">Note</span>
+              </div>
+              <p class="text-sm text-slate-300 leading-relaxed">
+                The @ appears in the query, so it is not a login trick.
+              </p>
+
+              <!-- Collapsible Passed Checks -->
+              <div class="rounded-xl bg-slate-950/70 border border-slate-800 overflow-hidden">
+                <button class="w-full min-h-[44px] px-4 py-3 flex items-center justify-between text-left hover:bg-slate-900 transition-colors" onclick="togglePassedChecks()" type="button">
+                  <div class="flex items-center gap-2 text-emerald-400 text-sm font-semibold">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    <span>Passed Checks (5 rules satisfied)</span>
+                  </div>
+                  <svg class="w-4 h-4 text-slate-400 transition-transform duration-200" id="passed-chevron" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </button>
+                <div class="hidden px-4 pb-4 pt-1 flex flex-col gap-2.5 text-xs text-slate-400 border-t border-slate-800/80" id="passed-checks-body">
+                  <div class="flex items-center gap-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                    <span>No unescaped authority credential spoofing</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                    <span>Zero Unicode or Cyrillic homoglyph characters</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                    <span>Transport Layer Security declared (HTTPS)</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                    <span>Explicit non-standard port 8443 recognized</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                    <span>Standard uncompressed query argument structure</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+        return;
+      }
+    }
+
+    function togglePassedChecks() {
+      passedChecksOpen = !passedChecksOpen;
+      const body = document.getElementById('passed-checks-body');
+      const chevron = document.getElementById('passed-chevron');
+      if (!body) return;
+
+      if (passedChecksOpen) {
+        body.classList.remove('hidden');
+        chevron.style.transform = 'rotate(180deg)';
+      } else {
+        body.classList.add('hidden');
+        chevron.style.transform = 'rotate(0deg)';
+      }
+    }
+
+    function clearInput() {
+      document.getElementById('url-input').value = '';
+      loadState('A');
+    }
+
+    function triggerQrClick() {
+      // Simulates reading a complex safe QR image or triggers file picker behavior
+      loadState('E');
+    }
+
+    function selectChip(type) {
+      if (type === 'ordinary') {
+        const input = document.getElementById('url-input');
+        input.value = 'https://www.campus.example/library';
+        // Render ordinary safe
+        loadState('E');
+      } else if (type === 'ip_address') {
+        const input = document.getElementById('url-input');
+        input.value = 'http://192.0.2.14/login';
+        loadState('B');
+      }
+    }
+
+    function executeAnalysis() {
+      const val = document.getElementById('url-input').value.trim();
+      if (!val) {
+        loadState('A');
+        return;
+      }
+
+      if (val.includes('@') && val.indexOf('@') < val.indexOf('/')) {
+        loadState('B');
+      } else if (val.includes('саmpus') || val.includes('cаmpus') || val.includes('xn--')) {
+        loadState('C');
+      } else if (val.includes('bit.ly') || val.includes('tinyurl')) {
+        loadState('D');
+      } else if (val.includes('8443') || val.includes('campus.example')) {
+        loadState('E');
+      } else if (!val.includes('://')) {
+        loadState('F');
+      } else {
+        loadState('E');
+      }
+    }
+
+    // Initialize application on State A (Empty / Ready)
+    window.addEventListener('DOMContentLoaded', () => {
+      loadState('A');
+    });
+  </script>
+</body></html>
