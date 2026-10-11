@@ -6,6 +6,8 @@ import EmptyState from './ui/EmptyState';
 import ErrorState from './ui/ErrorState';
 import Footer from './ui/Footer';
 import { analyze } from './engine';
+import { decodeQrImage } from './qr/decodeQr';
+import { AlertCircleIcon } from './ui/icons';
 
 export default function App() {
   const [inputVal, setInputVal] = useState('');
@@ -13,12 +15,15 @@ export default function App() {
   const [resultData, setResultData] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
   const [errorType, setErrorType] = useState('link'); // 'link' | 'qr' | 'both'
-  const [qrPlaceholderNotice, setQrPlaceholderNotice] = useState('');
+  const [isQrLoading, setIsQrLoading] = useState(false);
+  const [qrError, setQrError] = useState('');
+  const [qrSuccessNotice, setQrSuccessNotice] = useState('');
 
   // Handles typing and pasting: immediately runs link analysis when valid
   const handleInputChange = (newVal) => {
     setInputVal(newVal);
-    setQrPlaceholderNotice('');
+    setQrError('');
+    setQrSuccessNotice('');
     const targetUrl = typeof newVal === 'string' ? newVal.trim() : '';
 
     if (!targetUrl) {
@@ -40,7 +45,7 @@ export default function App() {
 
   // Executes link analysis through the single analyze() integration point
   const handleAnalyze = (urlToAnalyze = inputVal) => {
-    setQrPlaceholderNotice('');
+    setQrError('');
     const targetUrl = typeof urlToAnalyze === 'string' ? urlToAnalyze.trim() : inputVal.trim();
 
     if (!targetUrl) {
@@ -67,6 +72,8 @@ export default function App() {
   // Handles clicking any example chip
   const handleSelectSample = (sampleUrl) => {
     setInputVal(sampleUrl);
+    setQrError('');
+    setQrSuccessNotice('');
     handleAnalyze(sampleUrl);
   };
 
@@ -76,34 +83,29 @@ export default function App() {
     setStatus('idle');
     setResultData(null);
     setErrorMessage('');
-    setQrPlaceholderNotice('');
+    setQrError('');
+    setQrSuccessNotice('');
   };
 
-  // Handles QR image file upload
-  const handleQrUpload = (file) => {
+  // Handles QR image file upload and client-side barcode decoding
+  const handleQrUpload = async (file) => {
     if (!file) return;
 
-    // Read the image file client-side as ArrayBuffer / DataURL
-    const reader = new FileReader();
+    setQrError('');
+    setQrSuccessNotice('');
+    setIsQrLoading(true);
 
-    reader.onload = () => {
-      // TODO: Connect jsQR barcode decoder here.
-      // Once integrated, pass the image imageData to jsQR(imageData.data, width, height),
-      // extract the decoded URL string, setInputVal(decodedUrl), and call handleAnalyze(decodedUrl).
-      // If decoding fails, setErrorType('qr') and setErrorMessage('No QR code found in this image.').
-
-      setQrPlaceholderNotice(
-        `QR decoding will be connected here (Read ${file.name}, ${Math.round(file.size / 1024)} KB)`
-      );
-    };
-
-    reader.onerror = () => {
-      setErrorType('qr');
-      setErrorMessage('No QR code found in this image.');
-      setStatus('error');
-    };
-
-    reader.readAsDataURL(file);
+    try {
+      const decodedText = await decodeQrImage(file);
+      setInputVal(decodedText);
+      handleAnalyze(decodedText);
+      setQrSuccessNotice(`QR code decoded successfully: ${decodedText}`);
+    } catch (err) {
+      const msg = err?.message || 'No readable QR code found';
+      setQrError(msg);
+    } finally {
+      setIsQrLoading(false);
+    }
   };
 
   return (
@@ -123,22 +125,46 @@ export default function App() {
               onClear={handleClear}
               onQrUpload={handleQrUpload}
               onSelectSample={handleSelectSample}
+              isQrLoading={isQrLoading}
             />
 
-            {/* QR Notice banner when file is read */}
-            {qrPlaceholderNotice && (
+            {/* Dismissible QR Scan Error banner */}
+            {qrError && (
+              <div
+                role="alert"
+                className="p-4 rounded-xl bg-red-950/60 border border-red-500/50 text-red-200 text-sm flex items-center justify-between gap-3 shadow-lg"
+              >
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <AlertCircleIcon className="w-5 h-5 text-red-400 shrink-0" />
+                  <div className="flex flex-col min-w-0">
+                    <span className="font-bold text-red-300">QR Scan Failed</span>
+                    <span className="text-xs text-red-200/90 truncate">{qrError}</span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setQrError('')}
+                  className="text-xs font-mono text-red-300 hover:text-white px-2.5 py-1.5 rounded-lg border border-red-500/40 bg-red-900/40 hover:bg-red-900/70 min-h-[36px] cursor-pointer shrink-0 transition-colors"
+                >
+                  Dismiss
+                </button>
+              </div>
+            )}
+
+            {/* Dismissible QR Success banner */}
+            {qrSuccessNotice && (
               <div
                 role="status"
                 className="p-4 rounded-xl bg-cyan-950/40 border border-cyan-500/40 text-cyan-200 text-sm flex items-center justify-between gap-3 shadow-lg"
               >
-                <div className="flex items-center gap-2.5">
+                <div className="flex items-center gap-2.5 min-w-0">
                   <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shrink-0" aria-hidden="true" />
-                  <span>{qrPlaceholderNotice}</span>
+                  <span className="text-xs sm:text-sm font-mono truncate">{qrSuccessNotice}</span>
                 </div>
                 <button
                   type="button"
-                  onClick={() => setQrPlaceholderNotice('')}
-                  className="text-xs font-mono text-cyan-400 hover:text-white px-2 py-1 rounded border border-cyan-500/30 min-h-[36px]"
+                  onClick={() => setQrSuccessNotice('')}
+                  className="text-xs font-mono text-cyan-400 hover:text-white px-2 py-1 rounded border border-cyan-500/30 min-h-[36px] cursor-pointer shrink-0"
                 >
                   Dismiss
                 </button>

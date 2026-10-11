@@ -1,6 +1,8 @@
 import React, { useRef, useState } from 'react';
-import { LinkIcon, ClearIcon, SearchIcon, QrIcon, LockIcon, InfoIcon } from './icons';
+import { LinkIcon, ClearIcon, SearchIcon, QrIcon, LockIcon, InfoIcon, SpinnerIcon } from './icons';
 import ExampleChips from './ExampleChips';
+
+const ACCEPTED_IMAGE_TYPES = ['.png', '.jpg', '.jpeg', '.webp'];
 
 export default function InputCard({
   value,
@@ -8,7 +10,8 @@ export default function InputCard({
   onAnalyze,
   onClear,
   onQrUpload,
-  onSelectSample
+  onSelectSample,
+  isQrLoading = false
 }) {
   const fileInputRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -20,7 +23,16 @@ export default function InputCard({
     }
   };
 
+  const isAcceptedImage = (file) => {
+    if (!file) return false;
+    const nameLower = file.name.toLowerCase();
+    const hasValidExt = ACCEPTED_IMAGE_TYPES.some((ext) => nameLower.endsWith(ext));
+    const hasValidMime = file.type === 'image/png' || file.type === 'image/jpeg' || file.type === 'image/webp';
+    return hasValidExt || hasValidMime;
+  };
+
   const handleFileChange = (e) => {
+    if (isQrLoading) return;
     const file = e.target.files?.[0];
     if (file) {
       onQrUpload(file);
@@ -31,7 +43,9 @@ export default function InputCard({
 
   const handleDragOver = (e) => {
     e.preventDefault();
-    setIsDragging(true);
+    if (!isQrLoading) {
+      setIsDragging(true);
+    }
   };
 
   const handleDragLeave = (e) => {
@@ -42,8 +56,9 @@ export default function InputCard({
   const handleDrop = (e) => {
     e.preventDefault();
     setIsDragging(false);
+    if (isQrLoading) return;
     const file = e.dataTransfer.files?.[0];
-    if (file && file.type.startsWith('image/')) {
+    if (file && isAcceptedImage(file)) {
       onQrUpload(file);
     }
   };
@@ -101,42 +116,56 @@ export default function InputCard({
 
       {/* QR Image Upload Area */}
       <div
-        onClick={() => fileInputRef.current?.click()}
+        onClick={() => !isQrLoading && fileInputRef.current?.click()}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         role="button"
         tabIndex={0}
+        aria-busy={isQrLoading}
         onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
+          if (!isQrLoading && (e.key === 'Enter' || e.key === ' ')) {
             e.preventDefault();
             fileInputRef.current?.click();
           }
         }}
         aria-label="Upload a QR image"
-        className={`group cursor-pointer border-2 border-dashed rounded-xl p-4 transition-all flex items-center gap-4 text-left min-h-[72px] focus:outline-none focus:ring-2 focus:ring-primary-container/40 ${
-          isDragging
-            ? 'border-primary-container bg-slate-900/90'
-            : 'border-slate-700 hover:border-primary-container/70 bg-slate-950/40 hover:bg-slate-900/60'
+        className={`group border-2 border-dashed rounded-xl p-4 transition-all flex items-center gap-4 text-left min-h-[72px] focus:outline-none focus:ring-2 focus:ring-primary-container/40 ${
+          isQrLoading
+            ? 'border-cyan-500/60 bg-cyan-950/20 cursor-wait'
+            : isDragging
+            ? 'border-primary-container bg-slate-900/90 cursor-pointer'
+            : 'border-slate-700 hover:border-primary-container/70 bg-slate-950/40 hover:bg-slate-900/60 cursor-pointer'
         }`}
       >
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/*"
+          accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
           onChange={handleFileChange}
+          disabled={isQrLoading}
           className="hidden"
           aria-hidden="true"
         />
         <div className="w-11 h-11 rounded-lg bg-surface-container flex items-center justify-center text-primary-container group-hover:scale-105 transition-transform shrink-0 border border-slate-700/50">
-          <QrIcon className="w-6 h-6" />
+          {isQrLoading ? (
+            <SpinnerIcon className="w-6 h-6 text-cyan-400" />
+          ) : (
+            <QrIcon className="w-6 h-6" />
+          )}
         </div>
         <div className="flex flex-col min-w-0">
-          <span className="text-sm font-bold text-on-surface group-hover:text-primary transition-colors">
-            Upload a QR image
+          <span className="text-sm font-bold text-on-surface group-hover:text-primary transition-colors flex items-center gap-2">
+            {isQrLoading ? (
+              <span className="text-cyan-300 font-mono">Decoding QR code...</span>
+            ) : (
+              'Upload a QR image'
+            )}
           </span>
           <span className="text-xs text-on-surface-variant truncate">
-            Drag &amp; drop or browse image for client-side barcode decode
+            {isQrLoading
+              ? 'Analyzing off-screen canvas matrix locally'
+              : 'Drag & drop or browse .png, .jpg, .webp for client-side decode'}
           </span>
         </div>
       </div>
