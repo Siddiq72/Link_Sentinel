@@ -5,6 +5,7 @@ import ResultPanel from './ui/ResultPanel';
 import EmptyState from './ui/EmptyState';
 import ErrorState from './ui/ErrorState';
 import Footer from './ui/Footer';
+import SelfTestModal from './ui/SelfTestModal';
 import { analyze } from './engine';
 import { decodeQrImage } from './qr/decodeQr';
 import { AlertCircleIcon } from './ui/icons';
@@ -18,6 +19,7 @@ export default function App() {
   const [isQrLoading, setIsQrLoading] = useState(false);
   const [qrError, setQrError] = useState('');
   const [qrSuccessNotice, setQrSuccessNotice] = useState('');
+  const [isSelfTestOpen, setIsSelfTestOpen] = useState(false);
 
   // Handles typing and pasting: immediately runs link analysis when valid
   const handleInputChange = (newVal) => {
@@ -108,7 +110,7 @@ export default function App() {
   return (
     <div className="bg-[#070d18] text-on-surface min-h-screen flex flex-col justify-between selection:bg-primary-container selection:text-on-primary-container">
       {/* 1. Header */}
-      <Header />
+      <Header onOpenSelfTest={() => setIsSelfTestOpen(true)} />
 
       {/* 2. Main 2-Column Application Layout */}
       <main className="w-full flex-1 max-w-[1280px] mx-auto px-4 sm:px-6 py-8">
@@ -188,6 +190,12 @@ export default function App() {
 
       {/* 3. Footer */}
       <Footer />
+
+      {/* 4. Evidence & Regression Self-Test Modal */}
+      <SelfTestModal
+        isOpen={isSelfTestOpen}
+        onClose={() => setIsSelfTestOpen(false)}
+      />
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import React from 'react';
 import { ShieldLockIcon } from './icons';
 
-export default function Header() {
+export default function Header({ onOpenSelfTest }) {
   return (
     <header className="w-full border-b border-slate-800/80 bg-[#070d18]/90 backdrop-blur-md sticky top-0 z-50">
       <div className="max-w-[1280px] mx-auto px-4 sm:px-6 h-20 flex items-center justify-between gap-4">
@@ -20,11 +20,25 @@ export default function Header() {
           </div>
         </div>
 
-        {/* Right: Privacy Pill Badge */}
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-950/40 border border-emerald-500/30 text-emerald-300 text-xs sm:text-sm font-medium shrink-0">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" aria-hidden="true"></span>
-          <span className="hidden sm:inline">Zero network requests during analysis</span>
-          <span className="inline sm:hidden">Zero network</span>
+        {/* Right: Actions & Privacy Pill Badge */}
+        <div className="flex items-center gap-2.5 sm:gap-3">
+          {/* Self-Test Evidence Trigger Button */}
+          <button
+            type="button"
+            onClick={onOpenSelfTest}
+            className="min-h-[36px] px-3 py-1.5 rounded-lg border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 text-xs font-mono font-bold transition-all flex items-center gap-1.5 shadow-[0_0_12px_rgba(16,185,129,0.15)] cursor-pointer active:scale-95 shrink-0 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+            aria-label="Open Self-Test Evidence and Regression Dashboard"
+          >
+            <span aria-hidden="true">⚡</span>
+            <span>Self-Test Evidence</span>
+          </button>
+
+          {/* Privacy Pill Badge */}
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-950/40 border border-emerald-500/30 text-emerald-300 text-xs sm:text-sm font-medium shrink-0">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" aria-hidden="true"></span>
+            <span className="hidden md:inline">Zero network requests during analysis</span>
+            <span className="inline md:hidden">Zero network</span>
+          </div>
         </div>
       </div>
     </header>
