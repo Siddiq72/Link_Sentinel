@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Header from './ui/Header';
 import InputCard from './ui/InputCard';
 import ResultPanel from './ui/ResultPanel';
@@ -20,6 +20,28 @@ export default function App() {
   const [qrError, setQrError] = useState('');
   const [qrSuccessNotice, setQrSuccessNotice] = useState('');
   const [isSelfTestOpen, setIsSelfTestOpen] = useState(false);
+
+  const resultRef = useRef(null);
+
+  // Automatically scroll smoothly to the result section on stacked viewports (< 1024px)
+  useEffect(() => {
+    if (resultData && resultRef.current) {
+      // Small timeout ensures the DOM has rendered the updated ResultPanel height
+      const timer = setTimeout(() => {
+        if (
+          typeof window !== 'undefined' &&
+          window.innerWidth < 1024 &&
+          typeof resultRef.current?.scrollIntoView === 'function'
+        ) {
+          resultRef.current.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start',
+          });
+        }
+      }, 80);
+      return () => clearTimeout(timer);
+    }
+  }, [resultData]);
 
   // Handles typing and pasting: immediately runs link analysis when valid
   const handleInputChange = (newVal) => {
@@ -173,7 +195,8 @@ export default function App() {
 
           {/* RIGHT COLUMN: Result Section (12 cols on mobile, 7 cols on lg) */}
           <section
-            className="lg:col-span-7 flex flex-col gap-4"
+            ref={resultRef}
+            className="lg:col-span-7 flex flex-col gap-4 scroll-mt-20 sm:scroll-mt-24"
             aria-label="Inspection Results"
             aria-live="polite"
           >
