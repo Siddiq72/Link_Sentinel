@@ -94,8 +94,9 @@ export default function InputCard({
             value={value}
             onChange={(e) => onChange(e.target.value)}
             onPaste={(e) => {
-              const pasted = e.clipboardData?.getData('text');
-              if (pasted) onChange(pasted);
+              e.preventDefault();
+              const pasted = e.clipboardData?.getData('text') || '';
+              onChange(pasted.trim());
             }}
             onKeyDown={handleKeyDown}
             placeholder="Paste a link to inspect"

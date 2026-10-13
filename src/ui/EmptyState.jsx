@@ -12,8 +12,24 @@ export default function EmptyState() {
           Awaiting Link or QR Input
         </h2>
         <p className="text-sm text-slate-400 leading-relaxed">
-          Paste a URL in the inspector or click an example above to inspect its anatomy and routing traps.
+          Paste a link, upload a QR image, or try an example.
         </p>
+      </div>
+
+      {/* Three-row Severity Legend */}
+      <div className="w-full max-w-md mt-2 flex flex-col gap-2 text-left">
+        <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-emerald-950/40 border border-emerald-500/30 text-emerald-300 text-xs sm:text-sm">
+          <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 shrink-0" aria-hidden="true" />
+          <span>Safe: no deception signals found (not a guarantee)</span>
+        </div>
+        <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-amber-950/40 border border-amber-500/30 text-amber-300 text-xs sm:text-sm">
+          <span className="w-2.5 h-2.5 rounded-full bg-amber-400 shrink-0" aria-hidden="true" />
+          <span>Review needed: can't be verified offline</span>
+        </div>
+        <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-red-950/40 border border-red-500/30 text-red-300 text-xs sm:text-sm">
+          <span className="w-2.5 h-2.5 rounded-full bg-red-400 shrink-0" aria-hidden="true" />
+          <span>Suspicious: clear structural deception</span>
+        </div>
       </div>
     </div>
   );

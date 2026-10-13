@@ -193,8 +193,15 @@ export function analyze(input) {
       id: 'standard-route',
       name: 'Standard Institutional Route',
       severity: 'note',
-      reason: 'Valid HTTPS connection directly to standard institutional domain.'
+      reason: 'This link uses https. No deception signals were found in its structure.'
     });
+  }
+
+  // Update http note text
+  for (const r of rules) {
+    if (r.id === 'insecure-scheme') {
+      r.reason = 'This link uses http, not https, so data sent to it is not encrypted.';
+    }
   }
 
   // Passed rules breakdown

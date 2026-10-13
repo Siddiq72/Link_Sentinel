@@ -1,6 +1,30 @@
 import React from 'react';
 import { AnatomyIcon } from './icons';
 
+const isIpv4 = (h) => {
+  if (!h || typeof h !== 'string') return false;
+  const parts = h.split('.');
+  if (parts.length !== 4) return false;
+  return parts.every((p) => /^\d+$/.test(p) && Number(p) >= 0 && Number(p) <= 255);
+};
+
+const isIpv6 = (h) => {
+  if (!h || typeof h !== 'string') return false;
+  if (h.startsWith('[') && h.endsWith(']')) return true;
+  return h.includes(':') && /^[0-9a-fA-F:]+$/.test(h);
+};
+
+const isPrivateIp = (ip) => {
+  if (!isIpv4(ip)) return ip === '[::1]' || ip === '::1';
+  const [a, b] = ip.split('.').map(Number);
+  if (a === 10) return true;
+  if (a === 172 && b >= 16 && b <= 31) return true;
+  if (a === 192 && b === 168) return true;
+  if (a === 127) return true;
+  if (a === 169 && b === 254) return true;
+  return false;
+};
+
 export default function UrlTokens({ parts, anomalies = [], verdict }) {
   if (!parts) return null;
 
@@ -14,9 +38,15 @@ export default function UrlTokens({ parts, anomalies = [], verdict }) {
     query = ''
   } = parts;
 
+  const isPrivateIpHost = anomalies.includes('private_ip_host') || isPrivateIp(host);
+  const isPublicIpHost =
+    (anomalies.includes('raw_ip_host') && !isPrivateIpHost) ||
+    ((isIpv4(host) || isIpv6(host)) && !isPrivateIpHost);
+  const isIpHost = isPrivateIpHost || isPublicIpHost;
+
   const isDecoyUserinfo = Boolean(userinfo) && (anomalies.includes('userinfo_decoy') || verdict === 'suspicious');
   const hasLookalike = anomalies.includes('homoglyph_cyrillic') || /[\u0400-\u04FF]/.test(host);
-  const isShortener = anomalies.includes('url_shortener') || verdict === 'review';
+  const isShortener = anomalies.includes('url_shortener');
 
   // Render host characters with non-ASCII lookalike characters highlighted in red
   const renderHostText = (hostStr) => {
@@ -53,7 +83,15 @@ export default function UrlTokens({ parts, anomalies = [], verdict }) {
   let hostTagLabel = 'Host';
   let hostTagClass = 'text-slate-400';
 
-  if (hasLookalike) {
+  if (isPrivateIpHost) {
+    hostContainerClass = 'bg-amber-950/70 border border-amber-400 text-amber-200 text-sm font-bold';
+    hostTagLabel = 'PRIVATE IP HOST';
+    hostTagClass = 'text-amber-400';
+  } else if (isPublicIpHost) {
+    hostContainerClass = 'bg-red-950/80 border-2 border-red-500 text-sm font-bold shadow-[0_0_16px_rgba(239,68,68,0.3)]';
+    hostTagLabel = 'PUBLIC IP HOST';
+    hostTagClass = 'text-red-400';
+  } else if (hasLookalike) {
     hostContainerClass = 'bg-red-950/80 border-2 border-red-500 text-sm font-bold shadow-[0_0_16px_rgba(239,68,68,0.3)]';
     hostTagLabel = "CYRILLIC 'с' (U+0441)";
     hostTagClass = 'text-red-400';
@@ -170,15 +208,22 @@ export default function UrlTokens({ parts, anomalies = [], verdict }) {
         )}
       </div>
 
-      {/* Registrable domain callout */}
-      {registrableDomain && (
+      {/* Registrable domain callout or Host type for IP */}
+      {isIpHost ? (
+        <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
+          <span className="text-xs sm:text-sm text-slate-300 shrink-0">Host type:</span>
+          <span className={`font-mono text-sm sm:text-base font-bold ${isPrivateIpHost ? 'text-amber-300' : 'text-red-400'} select-all break-all`}>
+            {isPrivateIpHost ? 'private IP address' : 'public IP address'}
+          </span>
+        </div>
+      ) : registrableDomain ? (
         <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
           <span className="text-xs sm:text-sm text-slate-300 shrink-0">Registrable domain:</span>
           <span className={`font-mono text-sm sm:text-base font-bold ${regDomainClass} select-all break-all`}>
             {registrableDomain}
           </span>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

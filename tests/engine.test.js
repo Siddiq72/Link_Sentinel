@@ -11,6 +11,7 @@ import { evaluateUserinfoRule } from '../src/engine/rules/userinfoRule.js';
 import { evaluateIpRule } from '../src/engine/rules/ipRule.js';
 import { evaluateLookalikeRule } from '../src/engine/rules/lookalikeRule.js';
 import { evaluateShortenerRule } from '../src/engine/rules/shortenerRule.js';
+import { getVerdictSummary } from '../src/ui/ResultPanel.jsx';
 
 describe('Link Sentinel Core Demo Link Vectors', () => {
   it('Vector 1: https://campus.example/notices/lab-3 -> Safe', () => {
@@ -19,7 +20,13 @@ describe('Link Sentinel Core Demo Link Vectors', () => {
     expect(result.parts.host).toBe('campus.example');
     expect(result.parts.registrableDomain).toBe('campus.example');
     expect(result.parts.protocol).toBe('https://');
+    expect(result.parts.path).toBe('/notices/lab-3');
     expect(result.anomalies).toHaveLength(0);
+  });
+
+  it('analyzing "https://campus.example/notices/lab-3" gives path "/notices/lab-3"', () => {
+    const result = analyze('https://campus.example/notices/lab-3');
+    expect(result.parts.path).toBe('/notices/lab-3');
   });
 
   it('Vector 2: https://campus.example@other.example/login -> Suspicious', () => {
@@ -133,6 +140,20 @@ describe('Scheme Evaluation Rules', () => {
     expect(analyze('mailto:admin@campus.example').verdict).toBe('review');
   });
 
+  it('sets correct http note text when protocol is unencrypted http', () => {
+    const res = analyze('http://campus.example/test');
+    const httpRule = res.rules.find((r) => r.id === 'insecure-scheme');
+    expect(httpRule).toBeDefined();
+    expect(httpRule.reason).toBe('This link uses http, not https, so data sent to it is not encrypted.');
+  });
+
+  it('sets correct SAFE note text when link has no threats', () => {
+    const res = analyze('https://campus.example/notices/lab-3');
+    const safeRule = res.rules.find((r) => r.id === 'standard-route');
+    expect(safeRule).toBeDefined();
+    expect(safeRule.reason).toBe('This link uses https. No deception signals were found in its structure.');
+  });
+
   it('falls back gracefully to Suspicious: Malformed link for malformed URIs', () => {
     const malformed1 = analyze('https://::');
     expect(malformed1.verdict).toBe('suspicious');
@@ -205,12 +226,44 @@ describe('Example Template Chips Presentation Audit', () => {
       'Public IP': 'suspicious',
       'Private IP': 'review',
       'Shortener': 'review',
-      'Query @ bypass': 'safe'
+      'Safe: @ in query': 'safe'
     };
     for (const sample of SAMPLES) {
       expect(expected[sample.label]).toBeDefined();
       const res = analyze(sample.url);
       expect(res.verdict).toBe(expected[sample.label]);
     }
+  });
+});
+
+describe('Plain-Language Verdict Summary Sentences', () => {
+  it('Suspicious (@ trick): generates "The real host is <host>, not <decoy>."', () => {
+    const res = analyze('https://campus.example@other.example/login');
+    const summary = getVerdictSummary(res);
+    expect(summary).toBe('The real host is other.example, not campus.example.');
+  });
+
+  it('Suspicious (lookalike): generates "This domain imitates <real domain> using a look-alike character."', () => {
+    const res = analyze('https://\u0441ampus.example/login');
+    const summary = getVerdictSummary(res);
+    expect(summary).toBe('This domain imitates campus.example using a look-alike character.');
+  });
+
+  it('Review: uses the first Review reason for private IP', () => {
+    const res = analyze('http://192.168.1.10/');
+    const summary = getVerdictSummary(res);
+    expect(summary).toBe('Host is a private local area network IP address (RFC 1918). Destination only accessible on internal networks.');
+  });
+
+  it('Review: uses the first Review reason for shorteners', () => {
+    const res = analyze('https://bit.ly/3abcXYZ');
+    const summary = getVerdictSummary(res);
+    expect(summary).toBe('Shortened link: the real destination is hidden and cannot be checked offline.');
+  });
+
+  it('Safe: keeps the SAFE caveat', () => {
+    const res = analyze('https://campus.example/notices/lab-3');
+    const summary = getVerdictSummary(res);
+    expect(summary).toBe('No deception signals found. This is not a guarantee.');
   });
 });
