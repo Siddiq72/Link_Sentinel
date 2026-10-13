@@ -25,9 +25,9 @@ export default function InputCard({
 
   const isAcceptedImage = (file) => {
     if (!file) return false;
-    const nameLower = file.name.toLowerCase();
+    const nameLower = file.name ? file.name.toLowerCase() : '';
     const hasValidExt = ACCEPTED_IMAGE_TYPES.some((ext) => nameLower.endsWith(ext));
-    const hasValidMime = file.type === 'image/png' || file.type === 'image/jpeg' || file.type === 'image/webp';
+    const hasValidMime = (file.type && file.type.startsWith('image/')) || file.type === 'image/png' || file.type === 'image/jpeg' || file.type === 'image/webp';
     return hasValidExt || hasValidMime;
   };
 
@@ -130,7 +130,7 @@ export default function InputCard({
             fileInputRef.current?.click();
           }
         }}
-        aria-label="Upload a QR image"
+        aria-label="Scan or Upload QR Image"
         className={`group border-2 border-dashed rounded-xl p-4 transition-all flex items-center gap-4 text-left min-h-[72px] focus:outline-none focus:ring-2 focus:ring-primary-container/40 ${
           isQrLoading
             ? 'border-cyan-500/60 bg-cyan-950/20 cursor-wait'
@@ -142,7 +142,8 @@ export default function InputCard({
         <input
           ref={fileInputRef}
           type="file"
-          accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
+          accept="image/*"
+          capture="environment"
           onChange={handleFileChange}
           disabled={isQrLoading}
           className="hidden"
@@ -160,13 +161,13 @@ export default function InputCard({
             {isQrLoading ? (
               <span className="text-cyan-300 font-mono">Decoding QR code...</span>
             ) : (
-              'Upload a QR image'
+              'Scan or Upload QR Image'
             )}
           </span>
           <span className="text-xs text-on-surface-variant truncate">
             {isQrLoading
               ? 'Analyzing off-screen canvas matrix locally'
-              : 'Drag & drop or browse .png, .jpg, .webp for client-side decode'}
+              : 'Use camera or browse .png, .jpg, .webp for client-side decode'}
           </span>
         </div>
       </div>
