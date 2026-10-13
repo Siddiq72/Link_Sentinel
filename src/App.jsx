@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import Header from './ui/Header';
 import InputCard from './ui/InputCard';
 import ResultPanel from './ui/ResultPanel';
@@ -23,27 +23,24 @@ export default function App() {
 
   const resultRef = useRef(null);
 
-  // Automatically scroll smoothly to the result section on stacked viewports (< 1024px)
-  useEffect(() => {
-    if (resultData && resultRef.current) {
-      // Small timeout ensures the DOM has rendered the updated ResultPanel height
-      const timer = setTimeout(() => {
-        if (
-          typeof window !== 'undefined' &&
-          window.innerWidth < 1024 &&
-          typeof resultRef.current?.scrollIntoView === 'function'
-        ) {
-          resultRef.current.scrollIntoView({
-            behavior: 'smooth',
-            block: 'start',
-          });
-        }
-      }, 80);
-      return () => clearTimeout(timer);
+  // Imperatively scroll smoothly to the result section on mobile/tablet viewports (< 1024px)
+  const scrollToResultOnMobile = () => {
+    if (
+      typeof window !== 'undefined' &&
+      window.innerWidth < 1024 &&
+      resultRef.current &&
+      typeof resultRef.current.scrollIntoView === 'function'
+    ) {
+      setTimeout(() => {
+        resultRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+        });
+      }, 50);
     }
-  }, [resultData]);
+  };
 
-  // Handles typing and pasting: immediately runs link analysis when valid
+  // Handles typing and pasting: immediately runs link analysis when valid without scrolling
   const handleInputChange = (newVal) => {
     setInputVal(newVal);
     setQrError('');
@@ -62,6 +59,7 @@ export default function App() {
       setResultData(result);
       setStatus('result');
       setErrorMessage('');
+      // Deliberately no auto-scroll on keystroke
     } catch {
       // While typing an incomplete URL, keep current view without interrupting
     }
@@ -82,6 +80,7 @@ export default function App() {
       setResultData(result);
       setStatus('result');
       setErrorMessage('');
+      scrollToResultOnMobile();
     } catch (err) {
       setErrorMessage(err.message || 'Please enter a valid link.');
       setErrorType('link');
