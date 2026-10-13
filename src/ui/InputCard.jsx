@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { LinkIcon, ClearIcon, SearchIcon, QrIcon, LockIcon, InfoIcon, SpinnerIcon, CameraIcon, UploadIcon } from './icons';
+import { LinkIcon, ClearIcon, SearchIcon, QrIcon, LockIcon, InfoIcon, SpinnerIcon } from './icons';
 import ExampleChips from './ExampleChips';
 
 const ACCEPTED_IMAGE_TYPES = ['.png', '.jpg', '.jpeg', '.webp'];
@@ -14,7 +14,6 @@ export default function InputCard({
   isQrLoading = false
 }) {
   const fileInputRef = useRef(null);
-  const cameraInputRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
 
   const handleKeyDown = (e) => {
@@ -131,8 +130,8 @@ export default function InputCard({
             fileInputRef.current?.click();
           }
         }}
-        aria-label="Scan or Upload QR Image"
-        className={`group border-2 border-dashed rounded-xl p-4 sm:p-5 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left min-h-[76px] focus:outline-none focus:ring-2 focus:ring-primary-container/40 ${
+        aria-label="Upload a QR image"
+        className={`group border-2 border-dashed rounded-xl p-4 transition-all flex items-center gap-4 text-left min-h-[72px] focus:outline-none focus:ring-2 focus:ring-primary-container/40 ${
           isQrLoading
             ? 'border-cyan-500/60 bg-cyan-950/20 cursor-wait'
             : isDragging
@@ -140,19 +139,6 @@ export default function InputCard({
             : 'border-slate-700 hover:border-primary-container/70 bg-slate-950/40 hover:bg-slate-900/60 cursor-pointer'
         }`}
       >
-        {/* Hidden Camera Input (Rear-Facing Environment Capture) */}
-        <input
-          ref={cameraInputRef}
-          type="file"
-          accept="image/*"
-          capture="environment"
-          onChange={handleFileChange}
-          disabled={isQrLoading}
-          className="hidden"
-          aria-hidden="true"
-        />
-
-        {/* Hidden File/Gallery Input (Native Picker Without Forced Capture) */}
         <input
           ref={fileInputRef}
           type="file"
@@ -162,62 +148,27 @@ export default function InputCard({
           className="hidden"
           aria-hidden="true"
         />
-
-        <div className="flex items-center gap-4 min-w-0 flex-1">
-          <div className="w-11 h-11 rounded-lg bg-surface-container flex items-center justify-center text-primary-container group-hover:scale-105 transition-transform shrink-0 border border-slate-700/50">
-            {isQrLoading ? (
-              <SpinnerIcon className="w-6 h-6 text-cyan-400" />
-            ) : (
-              <QrIcon className="w-6 h-6" />
-            )}
-          </div>
-          <div className="flex flex-col min-w-0">
-            <span className="text-sm font-bold text-on-surface group-hover:text-primary transition-colors flex items-center gap-2">
-              {isQrLoading ? (
-                <span className="text-cyan-300 font-mono">Decoding QR code...</span>
-              ) : (
-                'Scan or Upload QR Image'
-              )}
-            </span>
-            <span className="text-xs text-on-surface-variant truncate">
-              {isQrLoading
-                ? 'Analyzing off-screen canvas matrix locally'
-                : 'Use camera or browse .png, .jpg, .webp for client-side decode'}
-            </span>
-          </div>
+        <div className="w-11 h-11 rounded-lg bg-surface-container flex items-center justify-center text-primary-container group-hover:scale-105 transition-transform shrink-0 border border-slate-700/50">
+          {isQrLoading ? (
+            <SpinnerIcon className="w-6 h-6 text-cyan-400" />
+          ) : (
+            <QrIcon className="w-6 h-6" />
+          )}
         </div>
-
-        {/* Distinct Action Buttons */}
-        {!isQrLoading && (
-          <div className="flex items-center gap-2 shrink-0 self-stretch sm:self-auto">
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                cameraInputRef.current?.click();
-              }}
-              className="flex-1 sm:flex-initial min-h-[38px] px-3.5 py-1.5 rounded-lg bg-cyan-500/15 hover:bg-cyan-500/25 active:bg-cyan-500/35 text-cyan-300 hover:text-cyan-200 border border-cyan-500/40 hover:border-cyan-500/60 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-cyan-400/50"
-              aria-label="Scan with Camera"
-              title="Open camera to scan QR code"
-            >
-              <CameraIcon className="w-3.5 h-3.5 text-cyan-400" />
-              <span>Take Photo / Scan</span>
-            </button>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                fileInputRef.current?.click();
-              }}
-              className="flex-1 sm:flex-initial min-h-[38px] px-3.5 py-1.5 rounded-lg bg-slate-900/80 hover:bg-slate-800 active:bg-slate-700 text-slate-200 hover:text-white border border-slate-700/80 hover:border-slate-600 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-slate-400/50"
-              aria-label="Upload from Files"
-              title="Choose QR image from gallery or files"
-            >
-              <UploadIcon className="w-3.5 h-3.5 text-slate-400" />
-              <span>Upload from Files</span>
-            </button>
-          </div>
-        )}
+        <div className="flex flex-col min-w-0">
+          <span className="text-sm font-bold text-on-surface group-hover:text-primary transition-colors flex items-center gap-2">
+            {isQrLoading ? (
+              <span className="text-cyan-300 font-mono">Decoding QR code...</span>
+            ) : (
+              'Upload a QR image'
+            )}
+          </span>
+          <span className="text-xs text-on-surface-variant truncate">
+            {isQrLoading
+              ? 'Analyzing off-screen canvas matrix locally'
+              : 'Drag & drop or browse .png, .jpg, .webp'}
+          </span>
+        </div>
       </div>
 
       {/* Privacy note with lock icon */}
