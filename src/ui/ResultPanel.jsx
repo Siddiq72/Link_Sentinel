@@ -331,9 +331,15 @@ export default function ResultPanel({ result }) {
   const summary = getVerdictSummary({ verdict, parts, anomalies, rules });
 
   return (
-    <div className="flex flex-col gap-5 scroll-mt-20 sm:scroll-mt-24" aria-live="polite">
+    <div className="flex flex-col gap-5 scroll-mt-20 sm:scroll-mt-24 transition-all duration-200 ease-out" aria-live="polite">
       {/* 1. Verdict Banner */}
-      <VerdictBanner verdict={verdict} tag={tag} primaryReason={primaryReason} summary={summary} />
+      <VerdictBanner
+        verdict={verdict}
+        tag={tag}
+        primaryReason={primaryReason}
+        summary={summary}
+        target={result?.input || parts?.host || ''}
+      />
 
       {/* 2. URL Anatomy Breakdown or Non-Web Payload Card */}
       {result.payloadType === 'UPI' ? (

@@ -129,7 +129,10 @@ export default function App() {
   };
 
   return (
-    <div className="bg-[#070d18] text-on-surface min-h-screen flex flex-col justify-between selection:bg-primary-container selection:text-on-primary-container">
+    <div className="bg-[#070d18] text-on-surface min-h-screen flex flex-col justify-between selection:bg-cyan-500 selection:text-slate-950 relative overflow-x-hidden">
+      {/* Subtle ambient tactical glow */}
+      <div className="fixed inset-0 pointer-events-none bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(6,182,212,0.08),rgba(255,255,255,0))] -z-10" aria-hidden="true" />
+
       {/* 1. Header */}
       <Header onOpenSelfTest={() => setIsSelfTestOpen(true)} />
 

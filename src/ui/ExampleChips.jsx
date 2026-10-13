@@ -44,6 +44,25 @@ export const PAYLOAD_SAMPLES = [
 
 export const ALL_SAMPLES = [...SAMPLES, ...PAYLOAD_SAMPLES];
 
+function getChipTheme(label) {
+  if (['@ trick', 'Lookalike', 'Public IP'].includes(label)) {
+    return {
+      classes: 'border-rose-500/30 hover:border-rose-400 hover:bg-rose-950/30 text-rose-200',
+      dot: 'bg-rose-400 shadow-[0_0_6px_rgba(251,113,133,0.5)]'
+    };
+  }
+  if (['Ordinary', 'Safe: @ in query'].includes(label)) {
+    return {
+      classes: 'border-emerald-500/30 hover:border-emerald-400 hover:bg-emerald-950/30 text-emerald-200',
+      dot: 'bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.5)]'
+    };
+  }
+  return {
+    classes: 'border-cyan-500/30 hover:border-cyan-400 hover:bg-cyan-950/30 text-cyan-200',
+    dot: 'bg-cyan-400 shadow-[0_0_6px_rgba(34,211,238,0.5)]'
+  };
+}
+
 export default function ExampleChips({ onSelectSample }) {
   return (
     <div className="flex flex-col gap-2 pt-1">
@@ -51,17 +70,22 @@ export default function ExampleChips({ onSelectSample }) {
         Example Templates:
       </span>
       <div className="flex flex-wrap items-center gap-2" role="toolbar" aria-label="Sample link templates">
-        {ALL_SAMPLES.map((sample) => (
-          <button
-            key={sample.label}
-            type="button"
-            onClick={() => onSelectSample(sample.url)}
-            className="min-h-[44px] px-3.5 py-2 rounded-lg bg-surface-container text-on-surface hover:bg-surface-container-high hover:text-primary transition-all text-sm font-sans shrink-0 border border-slate-700/60 active:scale-95 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-container/40"
-          >
-            {sample.label}
-          </button>
-        ))}
+        {ALL_SAMPLES.map((sample) => {
+          const theme = getChipTheme(sample.label);
+          return (
+            <button
+              key={sample.label}
+              type="button"
+              onClick={() => onSelectSample(sample.url)}
+              className={`min-h-[44px] px-3.5 py-1.5 rounded-full bg-slate-900/80 border ${theme.classes} transition-all duration-150 text-xs sm:text-sm font-sans shrink-0 active:scale-95 cursor-pointer focus:outline-none focus:ring-2 focus:ring-cyan-500/30 flex items-center gap-2 shadow-sm`}
+            >
+              <span className={`w-1.5 h-1.5 rounded-full ${theme.dot} shrink-0`} aria-hidden="true" />
+              <span>{sample.label}</span>
+            </button>
+          );
+        })}
       </div>
     </div>
   );
 }
+

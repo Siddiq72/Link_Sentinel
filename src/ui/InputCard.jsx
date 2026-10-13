@@ -77,7 +77,7 @@ export default function InputCard({
         <button
           type="button"
           onClick={onClear}
-          className="text-xs font-mono text-slate-300 hover:text-primary transition-colors flex items-center gap-1 min-h-[44px] px-2.5 rounded-lg border border-slate-700/50 hover:border-cyan-500/40 bg-slate-900/50 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-container/30"
+          className="text-xs font-mono text-slate-300 hover:text-cyan-400 hover:bg-cyan-950/40 transition-colors flex items-center gap-1 min-h-[44px] px-2.5 rounded-lg border border-slate-700/50 hover:border-cyan-500/40 bg-slate-900/50 cursor-pointer focus:outline-none focus:ring-2 focus:ring-cyan-500/30"
           aria-label="Clear input field"
         >
           <ClearIcon className="w-3.5 h-3.5" />
@@ -85,7 +85,7 @@ export default function InputCard({
         </button>
       </div>
 
-      {/* URL Input Bar + Cyan Analyze Button */}
+      {/* URL Input Bar + Cybernetic Analyze Button */}
       <div className="flex flex-col sm:flex-row gap-2.5">
         <div className="relative flex-1">
           <input
@@ -100,7 +100,7 @@ export default function InputCard({
             }}
             onKeyDown={handleKeyDown}
             placeholder="Paste a link to inspect"
-            className="w-full min-h-[48px] bg-slate-900/90 text-on-surface font-mono text-sm px-4 rounded-xl border border-slate-700/60 focus:outline-none focus:border-primary-container focus:ring-2 focus:ring-primary-container/20 transition-all placeholder:text-slate-500"
+            className="w-full min-h-[48px] bg-slate-900/90 text-on-surface font-mono text-sm px-4 rounded-xl border border-slate-700/60 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-500/60 focus:shadow-[0_0_20px_rgba(6,182,212,0.2)] transition-all placeholder:text-slate-500"
             aria-label="URL to inspect"
           />
         </div>
@@ -108,9 +108,9 @@ export default function InputCard({
           id="btn-analyze"
           type="button"
           onClick={onAnalyze}
-          className="min-h-[48px] px-6 rounded-xl bg-primary-container text-on-primary-container font-extrabold text-sm uppercase tracking-wider shadow-[0_0_18px_rgba(0,229,255,0.25)] hover:shadow-[0_0_24px_rgba(0,229,255,0.4)] active:scale-[0.98] transition-all flex items-center justify-center gap-2 shrink-0 cursor-pointer focus:outline-none focus:ring-2 focus:ring-cyan-300"
+          className="min-h-[48px] px-6 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold shadow-[0_0_20px_rgba(6,182,212,0.3)] transition-all active:scale-[0.98] flex items-center justify-center gap-2 shrink-0 cursor-pointer focus:outline-none focus:ring-2 focus:ring-cyan-300 uppercase tracking-wider text-sm"
         >
-          <SearchIcon className="w-4 h-4" />
+          <SearchIcon className="w-4 h-4 text-slate-950 stroke-[3]" />
           ANALYZE
         </button>
       </div>
