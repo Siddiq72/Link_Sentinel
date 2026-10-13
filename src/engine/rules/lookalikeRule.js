@@ -8,7 +8,7 @@
 
 import { distance } from 'fastest-levenshtein';
 import { PROTECTED_DOMAINS } from '../data/protectedDomains.js';
-import { getSkeleton, hasCyrillic, hasGreek, isMixedScript } from '../data/confusables.js';
+import { getSkeleton, hasCyrillic, hasGreek, isMixedScript, computeLookalikeDiff } from '../data/confusables.js';
 
 export function evaluateLookalikeRule(parsedContext) {
   const { domainInfo } = parsedContext;
@@ -74,7 +74,9 @@ export function evaluateLookalikeRule(parsedContext) {
     }
   }
 
+  let diff = null;
   if (detectedImitation) {
+    diff = computeLookalikeDiff(unicodeHost, detectedImitation);
     rules.push({
       id: 'character-substitution',
       name: 'Character Substitution',
@@ -93,7 +95,7 @@ export function evaluateLookalikeRule(parsedContext) {
     });
   }
 
-  return { rules, anomalies };
+  return { rules, anomalies, diff };
 }
 
 export default evaluateLookalikeRule;

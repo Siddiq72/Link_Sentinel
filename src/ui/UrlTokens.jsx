@@ -25,7 +25,7 @@ const isPrivateIp = (ip) => {
   return false;
 };
 
-export default function UrlTokens({ parts, anomalies = [], verdict }) {
+export default function UrlTokens({ parts, anomalies = [], verdict, hasLookalikeDiff = false }) {
   if (!parts) return null;
 
   const {
@@ -220,7 +220,9 @@ export default function UrlTokens({ parts, anomalies = [], verdict }) {
         <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
           <span className="text-xs sm:text-sm text-slate-300 shrink-0">Registrable domain:</span>
           <span className={`font-mono text-sm sm:text-base font-bold ${regDomainClass} select-all break-all`}>
-            {registrableDomain}
+            {hasLookalikeDiff && registrableDomain.includes(' (Punycode:')
+              ? registrableDomain.split(' (Punycode:')[0]
+              : registrableDomain}
           </span>
         </div>
       ) : null}

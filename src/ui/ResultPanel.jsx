@@ -2,6 +2,7 @@ import React from 'react';
 import VerdictBanner from './VerdictBanner';
 import UrlTokens from './UrlTokens';
 import ReasonCard from './ReasonCard';
+import LookalikeDiffCard from './LookalikeDiffCard';
 
 export function getVerdictSummary({ verdict, parts, anomalies = [], rules = [] }) {
   if (verdict === 'safe') {
@@ -238,7 +239,10 @@ export default function ResultPanel({ result }) {
       <VerdictBanner verdict={verdict} tag={tag} primaryReason={primaryReason} summary={summary} />
 
       {/* 2. URL Anatomy Breakdown */}
-      <UrlTokens parts={parts} anomalies={anomalies} verdict={verdict} />
+      <UrlTokens parts={parts} anomalies={anomalies} verdict={verdict} hasLookalikeDiff={Boolean(result?.lookalikeDiff)} />
+
+      {/* Look-alike Character Comparison */}
+      <LookalikeDiffCard diff={result?.lookalikeDiff} />
 
       {/* 3. Explainable Rule Breakdown */}
       <ReasonCard rules={rules} passedRules={passedRules} />

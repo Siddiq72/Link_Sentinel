@@ -76,7 +76,8 @@ export function analyze(input) {
             reason: 'Flagged: URI structure violates RFC/WHATWG specifications (e.g. invalid IPv6 brackets, corrupt port number, or illegal authority syntax).'
           }
         ],
-        passedRules: []
+        passedRules: [],
+        lookalikeDiff: null
       };
     }
     throw err;
@@ -143,6 +144,7 @@ export function analyze(input) {
   const lookalikeRes = evaluateLookalikeRule(context);
   lookalikeRes.rules.forEach((r) => rules.push(r));
   lookalikeRes.anomalies.forEach((a) => anomaliesSet.add(a));
+  const lookalikeDiff = lookalikeRes?.diff || null;
 
   // 5. Shortener rule
   const shortenerRes = evaluateShortenerRule(context);
@@ -230,7 +232,8 @@ export function analyze(input) {
     parts,
     anomalies: Array.from(anomaliesSet),
     rules,
-    passedRules
+    passedRules,
+    lookalikeDiff: lookalikeDiff || null
   };
 }
 
