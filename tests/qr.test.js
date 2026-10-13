@@ -149,4 +149,71 @@ describe('QR Code Decoder (Client-Side)', () => {
       globalThis.document = origDocument;
     }
   });
+
+  it('runs multi-pass contrast and threshold fallback passes when initial pass fails', async () => {
+    const origFileReader = globalThis.FileReader;
+    const origImage = globalThis.Image;
+    const origDocument = globalThis.document;
+
+    try {
+      class MockFileReader {
+        readAsDataURL() {
+          setTimeout(() => {
+            this.result = 'data:image/jpeg;base64,mock';
+            if (this.onload) this.onload();
+          }, 0);
+        }
+      }
+
+      class MockImage {
+        constructor() {
+          this.naturalWidth = 800;
+          this.naturalHeight = 600;
+        }
+        set src(val) {
+          this._src = val;
+          if (val) {
+            setTimeout(() => {
+              if (this.onload) this.onload();
+            }, 0);
+          }
+        }
+        get src() {
+          return this._src;
+        }
+      }
+
+      // Track that canvas was read
+      const getImageDataMock = vi.fn(() => ({
+        data: new Uint8ClampedArray(800 * 600 * 4).fill(120),
+        width: 800,
+        height: 600
+      }));
+
+      const mockCtx = {
+        drawImage: vi.fn(),
+        getImageData: getImageDataMock
+      };
+
+      const mockCanvas = {
+        width: 800,
+        height: 600,
+        getContext: vi.fn(() => mockCtx)
+      };
+
+      globalThis.FileReader = MockFileReader;
+      globalThis.Image = MockImage;
+      globalThis.document = {
+        createElement: vi.fn(() => mockCanvas)
+      };
+
+      const fakeBlob = new Blob(['mock'], { type: 'image/jpeg' });
+      await expect(decodeQrImage(fakeBlob)).rejects.toThrow('No readable QR code found');
+      expect(getImageDataMock).toHaveBeenCalled();
+    } finally {
+      globalThis.FileReader = origFileReader;
+      globalThis.Image = origImage;
+      globalThis.document = origDocument;
+    }
+  });
 });
