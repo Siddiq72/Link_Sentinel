@@ -86,7 +86,22 @@ export function evaluateLookalikeRule(parsedContext) {
     if (!anomalies.includes('lookalike_domain')) {
       anomalies.push('lookalike_domain');
     }
-  } else if (mixed || containsCyrillic || containsGreek) {
+  } else if (mixed) {
+    rules.push({
+      id: 'mixed-script-detection',
+      name: 'Mixed Script Detection',
+      severity: 'suspicious',
+      reason: 'Flagged: domain contains mixed or non-standard scripts capable of visual spoofing.'
+    });
+  } else if (!/[a-zA-Z]/.test(unicodeHost) && /[^\x00-\x7F]/.test(unicodeHost)) {
+    rules.push({
+      id: 'non-latin-script',
+      name: 'Internationalized Domain Name',
+      severity: 'review',
+      reason: 'Internationalized Domain Name — Uses full non-Latin script. Cannot verify authority against Latin-alphabet targets offline.'
+    });
+    anomalies.push('non_latin_script');
+  } else if (containsCyrillic || containsGreek) {
     rules.push({
       id: 'mixed-script-detection',
       name: 'Mixed Script Detection',

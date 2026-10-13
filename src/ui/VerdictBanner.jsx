@@ -2,7 +2,16 @@ import React from 'react';
 import { CheckShieldIcon, AlertTriangleIcon, ShieldAlertIcon } from './icons';
 
 export default function VerdictBanner({ verdict, tag, primaryReason, summary, subtitle }) {
-  const reason = primaryReason || (summary ? { label: 'Primary Reason:', text: summary } : null);
+  const reason = typeof primaryReason === 'string'
+    ? {
+        label: verdict === 'safe'
+          ? 'Classification basis:'
+          : verdict === 'review'
+          ? 'Why review is required:'
+          : "Why it's flagged as Suspicious:",
+        text: primaryReason
+      }
+    : (primaryReason || (summary ? { label: 'Primary Reason:', text: summary } : null));
 
   if (verdict === 'safe') {
     return (

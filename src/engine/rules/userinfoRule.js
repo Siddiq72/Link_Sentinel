@@ -7,7 +7,7 @@
  */
 
 export function evaluateUserinfoRule(parsedContext) {
-  const { url, domainInfo } = parsedContext;
+  const { url, domainInfo, hasEncodedAt, rawAuthority } = parsedContext;
   const username = url.username || '';
   const password = url.password || '';
   const userinfo = username + (password ? `:${password}` : '');
@@ -16,24 +16,28 @@ export function evaluateUserinfoRule(parsedContext) {
   const rules = [];
   const anomalies = [];
 
-  if (userinfo) {
-    if (userinfo.includes('.')) {
-      rules.push({
-        id: 'authority-routing-trap',
-        name: 'Authority Routing Trap',
-        severity: 'suspicious',
-        reason: `Flagged: the text before @ looks like a website, but the real host is ${realHost}.`
-      });
-      anomalies.push('userinfo_decoy');
-    } else {
-      rules.push({
-        id: 'userinfo-credentials',
-        name: 'Authority Credentials',
-        severity: 'review',
-        reason: 'Flagged: connection authority embeds user credentials before the host.'
-      });
-      anomalies.push('userinfo_credentials');
-    }
+  const isDecoy = Boolean(
+    (userinfo && userinfo.includes('.')) ||
+    hasEncodedAt ||
+    (rawAuthority && (/%2540|%40/i.test(rawAuthority) || (rawAuthority.includes('@') && rawAuthority.split('@')[0].includes('.'))))
+  );
+
+  if (isDecoy) {
+    rules.push({
+      id: 'authority-routing-trap',
+      name: 'Authority Routing Trap',
+      severity: 'suspicious',
+      reason: `Flagged: the text before @ looks like a website, but the real host is ${realHost}.`
+    });
+    anomalies.push('userinfo_decoy');
+  } else if (userinfo) {
+    rules.push({
+      id: 'userinfo-credentials',
+      name: 'Authority Credentials',
+      severity: 'review',
+      reason: 'Flagged: connection authority embeds user credentials before the host.'
+    });
+    anomalies.push('userinfo_credentials');
   } else if (url.search && url.search.includes('@')) {
     rules.push({
       id: 'parameter-context-check',
@@ -46,4 +50,5 @@ export function evaluateUserinfoRule(parsedContext) {
   return { rules, anomalies };
 }
 
+export const evaluateAuthorityRule = evaluateUserinfoRule;
 export default evaluateUserinfoRule;

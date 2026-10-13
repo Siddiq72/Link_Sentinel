@@ -127,7 +127,10 @@ export function analyzeDomain(hostname) {
     };
   }
 
-  const cleanHost = hostname.toLowerCase();
+  let cleanHost = hostname.toLowerCase();
+  while (cleanHost.endsWith('.') && cleanHost.length > 1) {
+    cleanHost = cleanHost.slice(0, -1);
+  }
   const unicodeHostname = toUnicode(cleanHost);
   const asciiHostname = toAscii(unicodeHostname);
   const isIp = isIpv4(cleanHost) || isIpv6(cleanHost);

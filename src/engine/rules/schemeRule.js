@@ -31,14 +31,24 @@ export function evaluateSchemeRule(parsedContext) {
   } else if (protocol === 'data:') {
     const rawLower = rawInput.toLowerCase();
     const pathnameLower = (url.pathname || '').toLowerCase();
-    if (rawLower.includes('text/html') || pathnameLower.includes('text/html')) {
+    const isExecutableData =
+      rawLower.includes('text/html') ||
+      pathnameLower.includes('text/html') ||
+      rawLower.includes('text/javascript') ||
+      pathnameLower.includes('text/javascript') ||
+      rawLower.includes('application/') ||
+      pathnameLower.includes('application/') ||
+      rawLower.includes('script');
+
+    if (isExecutableData) {
       rules.push({
         id: 'dangerous-scheme-data-html',
         name: 'Executable Data Scheme',
         severity: 'suspicious',
-        reason: 'Flagged: data:text/html scheme embeds raw HTML/scripts capable of phishing or execution.'
+        reason: 'Data URI Scheme — Encodes inline executable HTML or script content directly inside the link.'
       });
       anomalies.push('dangerous_scheme');
+      anomalies.push('executable_data');
     } else {
       rules.push({
         id: 'data-scheme',

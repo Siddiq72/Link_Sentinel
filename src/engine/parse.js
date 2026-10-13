@@ -16,7 +16,7 @@ const BIDI_REGEX = /[\u202A-\u202E\u2066-\u2069]/;
  */
 export function parseInput(rawInput) {
   if (rawInput === null || rawInput === undefined || typeof rawInput !== 'string') {
-    throw new Error('Please enter a valid link.');
+    throw new Error('Please enter a valid link. Please enter a link or scan a QR code to inspect.');
   }
 
   const hasZeroWidth = ZERO_WIDTH_REGEX.test(rawInput);
@@ -24,7 +24,7 @@ export function parseInput(rawInput) {
   const normalized = stripped.trim();
 
   if (!normalized) {
-    throw new Error('Please enter a valid link.');
+    throw new Error('Please enter a valid link. Please enter a link or scan a QR code to inspect.');
   }
 
   const hasBidi = BIDI_REGEX.test(normalized);
@@ -47,6 +47,28 @@ export function parseInput(rawInput) {
     prependedHttps = true;
   }
 
+  // Pre-normalize authority: decode %40/%2540 and strip trailing root dots on host
+  let hasEncodedAt = false;
+  let rawAuthority = '';
+  const authMatch = workingUrl.match(/^([a-zA-Z][a-zA-Z0-9+.-]*:\/\/)([^/?#]+)(.*)$/);
+  if (authMatch) {
+    rawAuthority = authMatch[2];
+    let hostPortPart = rawAuthority;
+
+    if (/%2540|%40/i.test(rawAuthority)) {
+      hasEncodedAt = true;
+      hostPortPart = hostPortPart.replace(/%2540/gi, '@').replace(/%40/gi, '@');
+    }
+
+    const atIdx = hostPortPart.lastIndexOf('@');
+    const userinfoPart = atIdx !== -1 ? hostPortPart.slice(0, atIdx + 1) : '';
+    let hostPart = atIdx !== -1 ? hostPortPart.slice(atIdx + 1) : hostPortPart;
+    hostPart = hostPart.replace(/\.(:\d+)?$/, (m, p) => p || '');
+
+    const normalizedAuth = userinfoPart + hostPart;
+    workingUrl = authMatch[1] + normalizedAuth + authMatch[3];
+  }
+
   let url;
   try {
     url = new URL(workingUrl);
@@ -65,6 +87,8 @@ export function parseInput(rawInput) {
     hasBidi,
     hasBackslash,
     hasZeroWidth,
+    hasEncodedAt,
+    rawAuthority,
     prependedHttps
   };
 }

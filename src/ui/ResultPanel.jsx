@@ -132,7 +132,15 @@ export function getPrimaryReason(arg) {
       };
     }
 
-    // 4. Dangerous Scheme
+    // 4. Executable Data Scheme
+    if (anomalies.includes('executable_data') || rules.some((r) => r.id === 'dangerous-scheme-data-html')) {
+      return {
+        label: "Why it's flagged as Suspicious:",
+        text: 'Data URI Scheme — Encodes inline executable HTML or script content directly inside the link.'
+      };
+    }
+
+    // 5. Dangerous Scheme
     const isDangerousScheme =
       anomalies.includes('dangerous_scheme') ||
       rules.some((r) => r.id?.startsWith('dangerous-scheme'));
@@ -144,7 +152,7 @@ export function getPrimaryReason(arg) {
       };
     }
 
-    // 5. Malformed
+    // 6. Malformed
     const isMalformed =
       anomalies.includes('malformed_uri_syntax') ||
       rules.some((r) => r.id === 'malformed-link');
@@ -164,7 +172,39 @@ export function getPrimaryReason(arg) {
   }
 
   if (verdict === 'review') {
-    // 1. URL Shortener
+    // 1. Non-Latin Script Domain
+    if (anomalies.includes('non_latin_script') || rules.some((r) => r.id === 'non-latin-script')) {
+      return {
+        label: 'Why review is required:',
+        text: 'Internationalized Domain Name — Uses full non-Latin script. Cannot verify authority against Latin-alphabet targets offline.'
+      };
+    }
+
+    // 2. Excessive input length
+    if (anomalies.includes('excessive_length') || rules.some((r) => r.id === 'excessive-length')) {
+      return {
+        label: 'Why review is required:',
+        text: 'Oversized Input — Link length exceeds standard URL limits (2048 characters). Truncated to prevent regex resource exhaustion.'
+      };
+    }
+
+    // 3. Multiple Targets Pasted
+    if (anomalies.includes('multiple_targets') || rules.some((r) => r.id === 'multiple-targets')) {
+      return {
+        label: 'Why review is required:',
+        text: 'Multiple destinations detected — Link Sentinel inspects one link at a time. Please test links individually.'
+      };
+    }
+
+    // 4. Unrecognized Input Structure
+    if (anomalies.includes('unrecognized_input') || rules.some((r) => r.id === 'unrecognized-input')) {
+      return {
+        label: 'Why review is required:',
+        text: 'Unrecognized structure — Input does not match a valid URL, network intent, or recognized barcode format.'
+      };
+    }
+
+    // 5. URL Shortener
     const isShortener =
       anomalies.includes('url_shortener') ||
       rules.some((r) => r.id === 'destination-obfuscation');
@@ -175,7 +215,7 @@ export function getPrimaryReason(arg) {
       };
     }
 
-    // 2. Private IP
+    // 6. Private IP
     const isPrivateIp =
       anomalies.includes('private_ip_host') ||
       rules.some((r) => r.id === 'private-ip-host');
@@ -187,7 +227,7 @@ export function getPrimaryReason(arg) {
       };
     }
 
-    // 3. Non-Web Scheme
+    // 7. Non-Web Scheme
     const isNonWebScheme =
       anomalies.includes('local_file_scheme') ||
       anomalies.includes('payment_intent_scheme') ||
@@ -204,7 +244,7 @@ export function getPrimaryReason(arg) {
       };
     }
 
-    // 4. Wi-Fi Config
+    // 8. Wi-Fi Config
     if (rules.some((r) => r.id === 'wifi-config-payload') || arg?.payloadType === 'WIFI') {
       return {
         label: 'Why review is required:',
@@ -238,6 +278,16 @@ export default function ResultPanel({ result }) {
     tag = 'WI-FI CONFIG';
   } else if (result.payloadType === 'TEXT') {
     tag = 'PLAIN TEXT';
+  } else if (anomalies.includes('executable_data')) {
+    tag = 'EXECUTABLE DATA';
+  } else if (anomalies.includes('non_latin_script')) {
+    tag = 'NON-LATIN SCRIPT';
+  } else if (anomalies.includes('excessive_length')) {
+    tag = 'EXCESSIVE LENGTH';
+  } else if (anomalies.includes('multiple_targets')) {
+    tag = 'MULTIPLE TARGETS';
+  } else if (anomalies.includes('unrecognized_input')) {
+    tag = 'UNRECOGNIZED INPUT';
   } else if (verdict === 'safe') {
     tag = 'NO RED FLAGS';
   } else if (anomalies.includes('malformed_uri_syntax')) {

@@ -12,7 +12,7 @@ export default function EmptyState() {
           Awaiting Link or QR Input
         </h2>
         <p className="text-sm text-slate-400 leading-relaxed">
-          Paste a link, upload a QR image, or try an example.
+          Please enter a link or scan a QR code to inspect.
         </p>
       </div>
 
