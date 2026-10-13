@@ -20,6 +20,7 @@ import { evaluateUserinfoRule } from './rules/userinfoRule.js';
 import { evaluateIpRule } from './rules/ipRule.js';
 import { evaluateLookalikeRule } from './rules/lookalikeRule.js';
 import { evaluateShortenerRule } from './rules/shortenerRule.js';
+import { detectAndParsePayload } from './payloads/index.js';
 
 export { parseInput } from './parse.js';
 export { analyzeDomain } from './domain.js';
@@ -28,6 +29,7 @@ export { evaluateUserinfoRule } from './rules/userinfoRule.js';
 export { evaluateIpRule } from './rules/ipRule.js';
 export { evaluateLookalikeRule } from './rules/lookalikeRule.js';
 export { evaluateShortenerRule } from './rules/shortenerRule.js';
+export { detectAndParsePayload } from './payloads/index.js';
 
 /**
  * Analyzes a URL string synchronously for deceptive routing and structural signals.
@@ -42,6 +44,33 @@ export function analyze(input) {
   }
   if (!input.trim()) {
     throw new Error('Please enter a valid link.');
+  }
+
+  const nonUrlPayload = detectAndParsePayload(input);
+  if (nonUrlPayload) {
+    const rawInput = input.trim();
+    return {
+      input: rawInput,
+      verdict: nonUrlPayload.verdict,
+      payloadType: nonUrlPayload.type,
+      data: nonUrlPayload.data,
+      primaryReason: nonUrlPayload.primaryReason,
+      tag: nonUrlPayload.tag,
+      rules: nonUrlPayload.rules || [],
+      reasons: nonUrlPayload.rules || [],
+      passedRules: nonUrlPayload.passedRules || [],
+      anomalies: nonUrlPayload.anomalies || [],
+      parts: nonUrlPayload.parts || {
+        protocol: '',
+        userinfo: '',
+        host: '',
+        registrableDomain: '',
+        port: '',
+        path: '',
+        query: ''
+      },
+      lookalikeDiff: null
+    };
   }
 
   let parsedContext;

@@ -31,6 +31,19 @@ export const SAMPLES = [
   }
 ];
 
+export const PAYLOAD_SAMPLES = [
+  {
+    label: 'UPI Pay',
+    url: 'upi://pay?pa=campus-canteen@oksbi&pn=Campus%20Canteen&am=250&cu=INR'
+  },
+  {
+    label: 'Wi-Fi QR',
+    url: 'WIFI:T:WPA;S:Campus_Guest_WiFi;P:Welcome2026;H:false;;'
+  }
+];
+
+export const ALL_SAMPLES = [...SAMPLES, ...PAYLOAD_SAMPLES];
+
 export default function ExampleChips({ onSelectSample }) {
   return (
     <div className="flex flex-col gap-2 pt-1">
@@ -38,7 +51,7 @@ export default function ExampleChips({ onSelectSample }) {
         Example Templates:
       </span>
       <div className="flex flex-wrap items-center gap-2" role="toolbar" aria-label="Sample link templates">
-        {SAMPLES.map((sample) => (
+        {ALL_SAMPLES.map((sample) => (
           <button
             key={sample.label}
             type="button"

@@ -3,6 +3,9 @@ import VerdictBanner from './VerdictBanner';
 import UrlTokens from './UrlTokens';
 import ReasonCard from './ReasonCard';
 import LookalikeDiffCard from './LookalikeDiffCard';
+import UpiPayloadCard from './payloads/UpiPayloadCard';
+import WifiPayloadCard from './payloads/WifiPayloadCard';
+import TextPayloadCard from './payloads/TextPayloadCard';
 
 export function getVerdictSummary({ verdict, parts, anomalies = [], rules = [] }) {
   if (verdict === 'safe') {
@@ -61,8 +64,15 @@ export function getVerdictSummary({ verdict, parts, anomalies = [], rules = [] }
   return '';
 }
 
-export function getPrimaryReason({ verdict, parts = {}, anomalies = [], rules = [] }) {
+export function getPrimaryReason(arg) {
+  const { verdict, parts = {}, anomalies = [], rules = [] } = arg || {};
   if (verdict === 'safe') {
+    if (rules.some((r) => r.id === 'non-executable-text') || arg?.payloadType === 'TEXT') {
+      return {
+        label: 'Classification basis:',
+        text: 'Non-Executable Text — This QR contains plain descriptive text, not a web link, executable script, or system intent.'
+      };
+    }
     return {
       label: 'Classification basis:',
       text: 'No deception signals detected — Standard authority formatting and valid HTTPS protocol with no homoglyphs, credentials, or redirection patterns found.'
@@ -194,6 +204,14 @@ export function getPrimaryReason({ verdict, parts = {}, anomalies = [], rules = 
       };
     }
 
+    // 4. Wi-Fi Config
+    if (rules.some((r) => r.id === 'wifi-config-payload') || arg?.payloadType === 'WIFI') {
+      return {
+        label: 'Why review is required:',
+        text: 'Local Network Configuration — Connecting to unverified or open Wi-Fi access points can expose traffic to interception.'
+      };
+    }
+
     // Fallback for other review triggers
     const firstReviewRule = rules.find((r) => r.severity?.toLowerCase() === 'review');
     return {
@@ -212,7 +230,15 @@ export default function ResultPanel({ result }) {
 
   // Determine tag for banner
   let tag = 'ANALYSIS';
-  if (verdict === 'safe') {
+  if (result.tag) {
+    tag = result.tag;
+  } else if (result.payloadType === 'UPI') {
+    tag = 'UPI PAYMENT';
+  } else if (result.payloadType === 'WIFI') {
+    tag = 'WI-FI CONFIG';
+  } else if (result.payloadType === 'TEXT') {
+    tag = 'PLAIN TEXT';
+  } else if (verdict === 'safe') {
     tag = 'NO RED FLAGS';
   } else if (anomalies.includes('malformed_uri_syntax')) {
     tag = 'MALFORMED';
@@ -230,7 +256,7 @@ export default function ResultPanel({ result }) {
     tag = 'SUSPICIOUS';
   }
 
-  const primaryReason = getPrimaryReason({ verdict, parts, anomalies, rules });
+  const primaryReason = result.primaryReason || getPrimaryReason({ verdict, parts, anomalies, rules });
   const summary = getVerdictSummary({ verdict, parts, anomalies, rules });
 
   return (
@@ -238,8 +264,16 @@ export default function ResultPanel({ result }) {
       {/* 1. Verdict Banner */}
       <VerdictBanner verdict={verdict} tag={tag} primaryReason={primaryReason} summary={summary} />
 
-      {/* 2. URL Anatomy Breakdown */}
-      <UrlTokens parts={parts} anomalies={anomalies} verdict={verdict} hasLookalikeDiff={Boolean(result?.lookalikeDiff)} />
+      {/* 2. URL Anatomy Breakdown or Non-Web Payload Card */}
+      {result.payloadType === 'UPI' ? (
+        <UpiPayloadCard data={result.data} anomalies={anomalies} />
+      ) : result.payloadType === 'WIFI' ? (
+        <WifiPayloadCard data={result.data} anomalies={anomalies} />
+      ) : result.payloadType === 'TEXT' ? (
+        <TextPayloadCard data={result.data} />
+      ) : (
+        <UrlTokens parts={parts} anomalies={anomalies} verdict={verdict} hasLookalikeDiff={Boolean(result?.lookalikeDiff)} />
+      )}
 
       {/* Look-alike Character Comparison */}
       <LookalikeDiffCard diff={result?.lookalikeDiff} />

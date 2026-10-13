@@ -129,7 +129,7 @@ export function getRuleBreakdown(rule) {
     };
   }
 
-  // 10. External application schemes
+  // 10. External application schemes & Payloads
   if (id === 'local-file-scheme') {
     return {
       mechanism: 'Local file scheme (file://) targeting host device filesystem.',
@@ -140,6 +140,54 @@ export function getRuleBreakdown(rule) {
     return {
       mechanism: 'Payment intent protocol (upi://) configured to launch external payment applications.',
       securityImpact: 'Directs the device to initiate financial transactions or fund transfers.'
+    };
+  }
+  if (id === 'upi-claimed-name') {
+    return {
+      mechanism: 'Claimed display name parameter (pn) encoded within payment intent URI.',
+      securityImpact: 'Display names in UPI QR codes are unverified creator-supplied strings. Banking systems route payments strictly by the Payee VPA address.'
+    };
+  }
+  if (id === 'upi-prefilled-amount') {
+    return {
+      mechanism: 'Pre-populated transaction debit amount (am) declared in payment intent URI.',
+      securityImpact: 'Attackers frequently pre-fill specific debit amounts on counterfeit posters to extract immediate unauthorized funds.'
+    };
+  }
+  if (id === 'upi-transaction-note') {
+    return {
+      mechanism: 'Transaction note parameter (tn) embedded in UPI URI parameters.',
+      securityImpact: 'Informational note supplied by requester to provide context or influence payer trust.'
+    };
+  }
+  if (id === 'wifi-config-payload') {
+    return {
+      mechanism: 'MECARD-formatted string encoding network SSID and Wi-Fi connection credentials.',
+      securityImpact: 'Prompts the device to associate with a local wireless network. Connecting to untrusted access points can expose device traffic.'
+    };
+  }
+  if (id === 'wifi-open-network') {
+    return {
+      mechanism: 'Wi-Fi configuration specifies no encryption (nopass / open).',
+      securityImpact: 'Data transmitted across open wireless networks is unencrypted and vulnerable to local eavesdropping and Evil Twin attacks.'
+    };
+  }
+  if (id === 'wifi-security-protocol') {
+    return {
+      mechanism: 'Encrypted wireless authentication standard specified in configuration.',
+      securityImpact: 'Device will negotiate encrypted over-the-air communication with the access point using pre-shared credentials.'
+    };
+  }
+  if (id === 'wifi-hidden-network') {
+    return {
+      mechanism: 'Network SSID is flagged as hidden / non-broadcast.',
+      securityImpact: 'Connecting to a hidden network causes client devices to broadcast probe requests revealing the network name.'
+    };
+  }
+  if (id === 'non-executable-text') {
+    return {
+      mechanism: 'Plain UTF-8 text string without URLs, executable protocols, or system deep links.',
+      securityImpact: 'Safe for local viewing and copying; cannot trigger browser navigation or execute device actions.'
     };
   }
   if (id === 'mail-handler-scheme') {
