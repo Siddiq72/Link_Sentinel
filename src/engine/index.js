@@ -21,6 +21,7 @@ import { evaluateUserinfoRule, evaluateAuthorityRule } from './rules/authorityRu
 import { evaluateIpRule } from './rules/ipRule.js';
 import { evaluateLookalikeRule } from './rules/lookalikeRule.js';
 import { evaluateShortenerRule } from './rules/shortenerRule.js';
+import { checkCombosquatting, evaluateCombosquattingRule } from './rules/combosquattingRule.js';
 import { detectAndParsePayload } from './payloads/index.js';
 
 export { parseInput } from './parse.js';
@@ -30,6 +31,7 @@ export { evaluateUserinfoRule, evaluateAuthorityRule } from './rules/authorityRu
 export { evaluateIpRule } from './rules/ipRule.js';
 export { evaluateLookalikeRule } from './rules/lookalikeRule.js';
 export { evaluateShortenerRule } from './rules/shortenerRule.js';
+export { checkCombosquatting, evaluateCombosquattingRule } from './rules/combosquattingRule.js';
 export { detectAndParsePayload } from './payloads/index.js';
 
 /**
@@ -339,6 +341,11 @@ export function analyze(input) {
     shortenerRes.rules.forEach((r) => rules.push(r));
     shortenerRes.anomalies.forEach((a) => anomaliesSet.add(a));
 
+    // 6. Combosquatting Heuristics Engine
+    const combosquattingRes = evaluateCombosquattingRule(context);
+    combosquattingRes.rules.forEach((r) => rules.push(r));
+    combosquattingRes.anomalies.forEach((a) => anomaliesSet.add(a));
+
     // Aggregation hierarchy: "suspicious" > "review" > "safe"
     let verdict = 'safe';
     const hasSuspicious = rules.some((r) => r.severity === 'suspicious');
@@ -381,7 +388,11 @@ export function analyze(input) {
     let tag;
     let primaryReason;
 
-    if (anomaliesSet.has('executable_data') || rules.some((r) => r.id === 'dangerous-scheme-data-html')) {
+    if (anomaliesSet.has('combosquatting_lure') || rules.some((r) => r.id === 'combosquatting_phishing_lure')) {
+      const comboRule = rules.find((r) => r.id === 'combosquatting_phishing_lure');
+      tag = 'COMBOSQUATTING';
+      primaryReason = comboRule?.primaryReason || comboRule?.reason || "Combosquatting Detected — Domain couples authentic brand name with high-risk lure keyword.";
+    } else if (anomaliesSet.has('executable_data') || rules.some((r) => r.id === 'dangerous-scheme-data-html')) {
       tag = 'EXECUTABLE DATA';
       primaryReason = "Data URI Scheme — Encodes inline executable HTML or script content directly inside the link.";
     } else if (anomaliesSet.has('non_latin_script') || rules.some((r) => r.id === 'non-latin-script')) {
@@ -424,6 +435,9 @@ export function analyze(input) {
     }
     if (!anomaliesSet.has('url_shortener')) {
       passedRules.push('Unobfuscated direct navigation route');
+    }
+    if (!anomaliesSet.has('combosquatting_lure')) {
+      passedRules.push('No combosquatting brand-lure keyword pairing');
     }
 
     const result = {

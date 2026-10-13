@@ -42,8 +42,23 @@ function getSeverityChip(severity) {
 }
 
 export function getRuleBreakdown(rule) {
-  const id = rule.id || '';
-  const reason = rule.reason || '';
+  if (rule?.mechanism && rule?.securityImpact) {
+    return {
+      mechanism: rule.mechanism,
+      securityImpact: rule.securityImpact
+    };
+  }
+
+  const id = rule?.id || rule?.ruleId || '';
+  const reason = rule?.reason || '';
+
+  // Combosquatting brand lure
+  if (id === 'combosquatting_phishing_lure') {
+    return {
+      mechanism: rule?.mechanism || 'Domain registers authentic brand token paired with high-risk lure keyword.',
+      securityImpact: rule?.securityImpact || 'Attackers register composite brand domains to bypass typo-checkers and mislead users into surrendering credentials.'
+    };
+  }
 
   // 1. Standard institutional safe route
   if (id === 'standard-route') {

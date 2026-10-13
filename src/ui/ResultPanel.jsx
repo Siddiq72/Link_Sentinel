@@ -13,6 +13,13 @@ export function getVerdictSummary({ verdict, parts, anomalies = [], rules = [] }
   }
 
   if (verdict === 'suspicious') {
+    // Combosquatting
+    const isCombosquatting = anomalies.includes('combosquatting_lure') || rules.some((r) => r.id === 'combosquatting_phishing_lure');
+    if (isCombosquatting) {
+      const comboRule = rules.find((r) => r.id === 'combosquatting_phishing_lure');
+      return comboRule?.reason || comboRule?.primaryReason || 'Combosquatting brand lure detected.';
+    }
+
     // 1. Suspicious (@ trick): "The real host is <host>, not <decoy>."
     const isUserinfoDecoy = anomalies.includes('userinfo_decoy') || rules.some((r) => r.id === 'authority-routing-trap');
     if (isUserinfoDecoy) {
@@ -80,6 +87,18 @@ export function getPrimaryReason(arg) {
   }
 
   if (verdict === 'suspicious') {
+    // Combosquatting
+    const isCombosquatting =
+      anomalies.includes('combosquatting_lure') ||
+      rules.some((r) => r.id === 'combosquatting_phishing_lure');
+    if (isCombosquatting) {
+      const comboRule = rules.find((r) => r.id === 'combosquatting_phishing_lure');
+      return {
+        label: "Why it's flagged as Suspicious:",
+        text: comboRule?.reason || comboRule?.primaryReason || 'Combosquatting Detected — Domain couples authentic brand name with high-risk keyword to mimic legitimate services.'
+      };
+    }
+
     // 1. @ trick
     const isUserinfoDecoy =
       anomalies.includes('userinfo_decoy') ||
@@ -278,6 +297,8 @@ export default function ResultPanel({ result }) {
     tag = 'WI-FI CONFIG';
   } else if (result.payloadType === 'TEXT') {
     tag = 'PLAIN TEXT';
+  } else if (anomalies.includes('combosquatting_lure') || rules.some((r) => r.id === 'combosquatting_phishing_lure')) {
+    tag = 'COMBOSQUATTING';
   } else if (anomalies.includes('executable_data')) {
     tag = 'EXECUTABLE DATA';
   } else if (anomalies.includes('non_latin_script')) {
