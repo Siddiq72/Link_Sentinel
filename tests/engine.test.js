@@ -11,7 +11,8 @@ import { evaluateUserinfoRule } from '../src/engine/rules/userinfoRule.js';
 import { evaluateIpRule } from '../src/engine/rules/ipRule.js';
 import { evaluateLookalikeRule } from '../src/engine/rules/lookalikeRule.js';
 import { evaluateShortenerRule } from '../src/engine/rules/shortenerRule.js';
-import { getVerdictSummary } from '../src/ui/ResultPanel.jsx';
+import { getVerdictSummary, getPrimaryReason } from '../src/ui/ResultPanel.jsx';
+import { getRuleBreakdown } from '../src/ui/ReasonCard.jsx';
 
 describe('Link Sentinel Core Demo Link Vectors', () => {
   it('Vector 1: https://campus.example/notices/lab-3 -> Safe', () => {
@@ -265,5 +266,96 @@ describe('Plain-Language Verdict Summary Sentences', () => {
     const res = analyze('https://campus.example/notices/lab-3');
     const summary = getVerdictSummary(res);
     expect(summary).toBe('No deception signals found. This is not a guarantee.');
+  });
+});
+
+describe('Primary Reason Callout Section on Verdict Banners', () => {
+  it('Suspicious (@ trick): generates distinct Why it is flagged as Suspicious callout', () => {
+    const res = analyze('https://campus.example@other.example/login');
+    const reason = getPrimaryReason(res);
+    expect(reason.label).toBe("Why it's flagged as Suspicious:");
+    expect(reason.text).toBe("Authority Routing Decoy — The link is attempting to disguise its destination. The text before '@' impersonates a domain, but the browser will actually connect to the real host 'other.example'.");
+  });
+
+  it('Suspicious (lookalike): generates distinct Homoglyph callout', () => {
+    const res = analyze('https://\u0441ampus.example/login');
+    const reason = getPrimaryReason(res);
+    expect(reason.label).toBe("Why it's flagged as Suspicious:");
+    expect(reason.text).toBe("Domain Impersonation / Homoglyph — The domain uses visually deceptive characters to imitate 'campus.example', misleading users into trusting a spoofed destination.");
+  });
+
+  it('Suspicious (raw IP): generates distinct Direct IP Authority callout', () => {
+    const res = analyze('http://192.0.2.45/signin');
+    const reason = getPrimaryReason(res);
+    expect(reason.label).toBe("Why it's flagged as Suspicious:");
+    expect(reason.text).toBe("Direct IP Authority — The link uses a raw unmapped IP address (192.0.2.45) rather than an authenticated domain name, commonly used to bypass domain-based security filters.");
+  });
+
+  it('Suspicious (dangerous scheme): generates distinct Executable Scheme callout', () => {
+    const res = analyze('javascript:alert(1)');
+    const reason = getPrimaryReason(res);
+    expect(reason.label).toBe("Why it's flagged as Suspicious:");
+    expect(reason.text).toBe("Executable Scheme — Protocol 'javascript:' can run scripts or render malicious code locally.");
+  });
+
+  it('Suspicious (malformed): generates distinct Malformed Structure callout', () => {
+    const res = analyze('https://::');
+    const reason = getPrimaryReason(res);
+    expect(reason.label).toBe("Why it's flagged as Suspicious:");
+    expect(reason.text).toBe("Malformed Structure — The link syntax is invalid or corrupted, preventing safe destination parsing.");
+  });
+
+  it('Review (shortener): generates distinct Hidden Destination callout', () => {
+    const res = analyze('https://bit.ly/3abcXYZ');
+    const reason = getPrimaryReason(res);
+    expect(reason.label).toBe('Why review is required:');
+    expect(reason.text).toBe('Hidden Destination — Shortened links conceal the real target host and cannot be resolved safely in an offline environment without outbound network requests.');
+  });
+
+  it('Review (private IP): generates distinct Internal Network Target callout', () => {
+    const res = analyze('http://192.168.1.10/');
+    const reason = getPrimaryReason(res);
+    expect(reason.label).toBe('Why review is required:');
+    expect(reason.text).toBe('Internal Network Target — The address belongs to a private RFC 1918 subnet (192.168.1.10). It is only reachable within an internal network or local hardware.');
+  });
+
+  it('Review (non-web scheme): generates distinct External Application Handler callout', () => {
+    const res = analyze('upi://pay?pa=campus@bank');
+    const reason = getPrimaryReason(res);
+    expect(reason.label).toBe('Why review is required:');
+    expect(reason.text).toBe("External Application Handler — Scheme 'upi:' triggers an external desktop or mobile application.");
+  });
+
+  it('Safe: generates distinct Classification basis callout', () => {
+    const res = analyze('https://campus.example/notices/lab-3');
+    const reason = getPrimaryReason(res);
+    expect(reason.label).toBe('Classification basis:');
+    expect(reason.text).toBe('No deception signals detected — Standard authority formatting and valid HTTPS protocol with no homoglyphs, credentials, or redirection patterns found.');
+  });
+});
+
+describe('ReasonCard Mechanism and Security Impact Breakdown', () => {
+  it('distinguishes Mechanism and Security Impact for authority routing trap', () => {
+    const breakdown = getRuleBreakdown({ id: 'authority-routing-trap', severity: 'suspicious' });
+    expect(breakdown.mechanism).toContain('URL authority contains userinfo');
+    expect(breakdown.securityImpact).toContain('Deceives users into believing');
+  });
+
+  it('distinguishes Mechanism and Security Impact for homoglyph substitution', () => {
+    const breakdown = getRuleBreakdown({ id: 'character-substitution', severity: 'suspicious' });
+    expect(breakdown.mechanism).toContain('homoglyphs');
+    expect(breakdown.securityImpact).toContain('mislead users into entering credentials');
+  });
+
+  it('distinguishes Mechanism and Security Impact for unencrypted HTTP', () => {
+    const breakdown = getRuleBreakdown({ id: 'insecure-scheme', severity: 'note' });
+    expect(breakdown.mechanism).toContain('Unencrypted HTTP scheme');
+    expect(breakdown.securityImpact).toContain('Man-in-the-Middle');
+  });
+
+  it('distinguishes Mechanism and Security Impact for standard route', () => {
+    const breakdown = getRuleBreakdown({ id: 'standard-route', severity: 'note' });
+    expect(breakdown.mechanism).toContain('Standard institutional domain route');
+    expect(breakdown.securityImpact).toContain('Connection is encrypted in transit');
   });
 });

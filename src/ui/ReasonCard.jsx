@@ -41,10 +41,173 @@ function getSeverityChip(severity) {
   }
 }
 
+export function getRuleBreakdown(rule) {
+  const id = rule.id || '';
+  const reason = rule.reason || '';
+
+  // 1. Standard institutional safe route
+  if (id === 'standard-route') {
+    return {
+      mechanism: 'Standard institutional domain route parsed with valid HTTPS protocol.',
+      securityImpact: 'Connection is encrypted in transit and no deceptive structural anomalies were detected.'
+    };
+  }
+
+  // 2. Insecure http
+  if (id === 'insecure-scheme') {
+    return {
+      mechanism: 'Unencrypted HTTP scheme (http://) parsed instead of secure HTTPS.',
+      securityImpact: 'Data sent to this link is not encrypted and can be intercepted or tampered with on public networks (Man-in-the-Middle).'
+    };
+  }
+
+  // 3. Authority Routing Trap (@ trick)
+  if (id === 'authority-routing-trap') {
+    return {
+      mechanism: 'URL authority contains userinfo text formatted like a domain name prior to the "@" delimiter.',
+      securityImpact: 'Deceives users into believing they are visiting the domain before "@", while browsers secretly route to the host after "@".'
+    };
+  }
+
+  // 4. Character substitution / Homoglyph / Lookalike
+  if (id === 'character-substitution' || id === 'mixed-script-detection') {
+    return {
+      mechanism: 'Hostname contains visually confusing characters (homoglyphs) or mixed scripts imitating a protected domain.',
+      securityImpact: 'Attackers register lookalike domains to mislead users into entering credentials on a spoofed destination.'
+    };
+  }
+
+  // 5. Direct IP Host
+  if (id === 'ip-host-detection') {
+    return {
+      mechanism: 'Host is a raw numerical public IP address rather than a registered, authenticated domain name.',
+      securityImpact: 'Frequently used by attackers to host malicious payloads and evade domain-based reputation blocklists.'
+    };
+  }
+
+  // 6. Obfuscated IP Host
+  if (id === 'obfuscated-ip-host') {
+    return {
+      mechanism: 'Host uses hexadecimal, octal, or integer encoding to disguise an IP address.',
+      securityImpact: 'Disguises destination address from basic URL filters while browsers decode and navigate to the numeric host.'
+    };
+  }
+
+  // 7. Private IP Host
+  if (id === 'private-ip-host') {
+    return {
+      mechanism: 'Host address falls within private RFC 1918 subnets, loopback, or link-local ranges.',
+      securityImpact: 'Only accessible on internal local area networks; external links targeting private IPs may probe local intranet services.'
+    };
+  }
+
+  // 8. URL Shortener
+  if (id === 'destination-obfuscation') {
+    return {
+      mechanism: 'Hostname belongs to a known public URL shortening or redirection service.',
+      securityImpact: 'Conceals the final destination URL and prevents offline structural risk analysis without opening the link.'
+    };
+  }
+
+  // 9. Dangerous schemes (javascript, vbscript, data:html)
+  if (id === 'dangerous-scheme-javascript' || id === 'dangerous-scheme-vbscript') {
+    return {
+      mechanism: 'Pseudo-protocol executes client-side script code directly in browser context.',
+      securityImpact: 'Can execute arbitrary malicious scripts or steal local session tokens without standard cross-origin restrictions.'
+    };
+  }
+  if (id === 'dangerous-scheme-data-html') {
+    return {
+      mechanism: 'Data URI embeds raw HTML and executable script payloads directly within the link string.',
+      securityImpact: 'Can render phishing pages or exploit client vulnerabilities without connecting to an external server.'
+    };
+  }
+  if (id === 'data-scheme') {
+    return {
+      mechanism: 'Data URI protocol packaging inline media or data payload without standard origin.',
+      securityImpact: 'Payload cannot be verified against remote host reputation and origin identity is opaque.'
+    };
+  }
+
+  // 10. External application schemes
+  if (id === 'local-file-scheme') {
+    return {
+      mechanism: 'Local file scheme (file://) targeting host device filesystem.',
+      securityImpact: 'Attempts to read or trigger files on the local operating system rather than navigating the web.'
+    };
+  }
+  if (id === 'payment-intent-scheme') {
+    return {
+      mechanism: 'Payment intent protocol (upi://) configured to launch external payment applications.',
+      securityImpact: 'Directs the device to initiate financial transactions or fund transfers.'
+    };
+  }
+  if (id === 'mail-handler-scheme') {
+    return {
+      mechanism: 'Mail handler scheme (mailto:) configured to launch local email client.',
+      securityImpact: 'Opens pre-populated draft messages in external email applications rather than navigating.'
+    };
+  }
+
+  // 11. Malformed link
+  if (id === 'malformed-link') {
+    return {
+      mechanism: 'URI structure violates WHATWG/RFC specifications (invalid brackets, corrupt port, or illegal authority syntax).',
+      securityImpact: 'Exploits discrepancies between security parsers and browser navigation engines, or indicates a broken attack payload.'
+    };
+  }
+
+  // 12. Obfuscation flags (bidi, backslash, zero-width)
+  if (id === 'bidi-override') {
+    return {
+      mechanism: 'Unicode bidirectional override characters (U+202E, etc.) reverse visual rendering of text.',
+      securityImpact: 'Visually disguises malicious domains or extensions (e.g. making an executable appear like an image or safe link).'
+    };
+  }
+  if (id === 'backslash-obfuscation') {
+    return {
+      mechanism: 'Backslash characters ("\\") used as delimiters within the link authority or path.',
+      securityImpact: 'Exploits parser discrepancies where backend scanners and web browsers interpret path boundaries differently.'
+    };
+  }
+  if (id === 'zero-width-character') {
+    return {
+      mechanism: 'Invisible zero-width characters (e.g. U+200B, U+FEFF) embedded within host or path text.',
+      securityImpact: 'Used by attackers to defeat keyword filters and pattern-matching security scanners.'
+    };
+  }
+
+  // 13. Authority Credentials
+  if (id === 'userinfo-credentials') {
+    return {
+      mechanism: 'URL authority embeds user credentials prior to the host without domain syntax.',
+      securityImpact: 'Transmits credentials in plaintext authority or obscures the actual hostname from casual inspection.'
+    };
+  }
+
+  // 14. Parameter context check
+  if (id === 'parameter-context-check') {
+    return {
+      mechanism: '"@" character is located inside the query parameters (?key=val@...) rather than the URL authority.',
+      securityImpact: 'Browsers treat this as data rather than login credentials; no authority spoofing occurs.'
+    };
+  }
+
+  // Default fallback for any unrecognized rule
+  return {
+    mechanism: reason || 'Pattern parsed during deterministic link structure evaluation.',
+    securityImpact: rule.severity === 'suspicious'
+      ? 'Deceptive structural pattern commonly associated with credential theft, spoofing, or filter evasion.'
+      : rule.severity === 'review'
+      ? 'Non-standard routing pattern requiring manual review or external network resolution.'
+      : 'Structural attribute noted during link evaluation.'
+  };
+}
+
 function SingleReasonCard({ rule }) {
   const [expanded, setExpanded] = useState(true);
   const ruleName = rule.name || rule.id.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
-  const reasonText = formatRuleReason(rule);
+  const { mechanism, securityImpact } = getRuleBreakdown(rule);
 
   return (
     <div className="bg-[#0c1729] border border-cyan-500/20 shadow-xl rounded-2xl overflow-hidden flex flex-col">
@@ -67,10 +230,35 @@ function SingleReasonCard({ rule }) {
         </div>
       </button>
       {expanded && (
-        <div className="px-5 pb-5 sm:px-6 sm:pb-6 pt-0">
-          <p className="text-sm text-slate-300 leading-relaxed border-t border-slate-800/80 pt-3">
-            {reasonText}
-          </p>
+        <div className="px-5 pb-5 sm:px-6 sm:pb-6 pt-0 flex flex-col gap-3.5 border-t border-slate-800/80 pt-3.5">
+          <div className="flex flex-col gap-1">
+            <span className="text-[11px] uppercase tracking-wider font-bold text-cyan-400 font-mono flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shrink-0" aria-hidden="true" />
+              Mechanism
+            </span>
+            <p className="text-xs sm:text-sm text-slate-200 leading-relaxed break-words font-sans">
+              {mechanism}
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <span className="text-[11px] uppercase tracking-wider font-bold font-mono flex items-center gap-1.5 text-slate-300">
+              <span
+                className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                  rule.severity?.toLowerCase() === 'suspicious'
+                    ? 'bg-red-400'
+                    : rule.severity?.toLowerCase() === 'review'
+                    ? 'bg-amber-400'
+                    : 'bg-emerald-400'
+                }`}
+                aria-hidden="true"
+              />
+              Security Impact
+            </span>
+            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed break-words font-sans">
+              {securityImpact}
+            </p>
+          </div>
         </div>
       )}
     </div>

@@ -1,12 +1,12 @@
 import React from 'react';
 import { CheckShieldIcon, AlertTriangleIcon, ShieldAlertIcon } from './icons';
 
-export default function VerdictBanner({ verdict, tag, summary, subtitle }) {
-  const displaySummary = summary || subtitle;
+export default function VerdictBanner({ verdict, tag, primaryReason, summary, subtitle }) {
+  const reason = primaryReason || (summary ? { label: 'Primary Reason:', text: summary } : null);
 
   if (verdict === 'safe') {
     return (
-      <div className="rounded-2xl p-5 bg-[#06241a] border-2 border-emerald-500 shadow-[0_0_32px_rgba(16,185,129,0.25)] flex flex-col gap-3">
+      <div className="rounded-2xl p-5 bg-[#06241a] border-2 border-emerald-500 shadow-[0_0_32px_rgba(16,185,129,0.25)] flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-xl bg-emerald-950/80 border border-emerald-500/50 flex items-center justify-center text-emerald-400 shadow-[0_0_16px_rgba(16,185,129,0.3)] shrink-0">
@@ -25,8 +25,19 @@ export default function VerdictBanner({ verdict, tag, summary, subtitle }) {
             {tag || 'NO RED FLAGS'}
           </span>
         </div>
-        <p className="text-xs sm:text-sm text-slate-300 border-t border-emerald-900/60 pt-2.5">
-          {displaySummary || 'No deception signals found. This is not a guarantee.'}
+
+        {/* Dedicated Classification Basis Callout */}
+        <div className="rounded-xl p-3.5 sm:p-4 bg-emerald-950/60 border border-emerald-500/40 text-emerald-100 flex flex-col gap-1.5 shadow-sm">
+          <span className="text-xs font-bold uppercase tracking-wider text-emerald-300 font-sans">
+            {reason?.label || 'Classification basis:'}
+          </span>
+          <p className="text-xs sm:text-sm text-slate-200 leading-relaxed break-words font-sans">
+            {reason?.text || 'No deception signals detected — Standard authority formatting and valid HTTPS protocol with no homoglyphs, credentials, or redirection patterns found.'}
+          </p>
+        </div>
+
+        <p className="text-xs sm:text-sm text-slate-300 border-t border-emerald-900/60 pt-2.5 font-sans">
+          No deception signals found. This is not a guarantee.
         </p>
       </div>
     );
@@ -34,7 +45,7 @@ export default function VerdictBanner({ verdict, tag, summary, subtitle }) {
 
   if (verdict === 'review') {
     return (
-      <div className="rounded-2xl p-5 bg-[#2b1f06] border-2 border-amber-500 shadow-[0_0_32px_rgba(245,158,11,0.25)] flex flex-col gap-3">
+      <div className="rounded-2xl p-5 bg-[#2b1f06] border-2 border-amber-500 shadow-[0_0_32px_rgba(245,158,11,0.25)] flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-xl bg-amber-950/80 border border-amber-500/50 flex items-center justify-center text-amber-400 shadow-[0_0_16px_rgba(245,158,11,0.3)] shrink-0">
@@ -53,10 +64,17 @@ export default function VerdictBanner({ verdict, tag, summary, subtitle }) {
             {tag || 'REVIEW'}
           </span>
         </div>
-        {displaySummary && (
-          <p className="text-xs sm:text-sm text-slate-300 border-t border-amber-900/60 pt-2.5">
-            {displaySummary}
-          </p>
+
+        {/* Dedicated Review Requirement Callout */}
+        {reason?.text && (
+          <div className="rounded-xl p-3.5 sm:p-4 bg-amber-950/60 border border-amber-500/40 text-amber-100 flex flex-col gap-1.5 shadow-sm">
+            <span className="text-xs font-bold uppercase tracking-wider text-amber-300 font-sans">
+              {reason.label || 'Why review is required:'}
+            </span>
+            <p className="text-xs sm:text-sm text-slate-200 leading-relaxed break-words font-sans">
+              {reason.text}
+            </p>
+          </div>
         )}
       </div>
     );
@@ -64,7 +82,7 @@ export default function VerdictBanner({ verdict, tag, summary, subtitle }) {
 
   // Suspicious (default fallback)
   return (
-    <div className="rounded-2xl p-5 bg-[#26080b] border-2 border-red-500 shadow-[0_0_36px_rgba(239,68,68,0.35)] flex flex-col gap-3">
+    <div className="rounded-2xl p-5 bg-[#26080b] border-2 border-red-500 shadow-[0_0_36px_rgba(239,68,68,0.35)] flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-xl bg-red-950/80 border border-red-500/50 flex items-center justify-center text-red-400 shadow-[0_0_20px_rgba(239,68,68,0.3)] animate-pulse shrink-0">
@@ -83,10 +101,17 @@ export default function VerdictBanner({ verdict, tag, summary, subtitle }) {
           {tag || 'SUSPICIOUS'}
         </span>
       </div>
-      {displaySummary && (
-        <p className="text-xs sm:text-sm text-slate-300 border-t border-red-900/60 pt-2.5">
-          {displaySummary}
-        </p>
+
+      {/* Dedicated Suspicious Trigger Callout */}
+      {reason?.text && (
+        <div className="rounded-xl p-3.5 sm:p-4 bg-red-950/60 border border-red-500/40 text-red-100 flex flex-col gap-1.5 shadow-sm">
+          <span className="text-xs font-bold uppercase tracking-wider text-red-300 font-sans">
+            {reason.label || "Why it's flagged as Suspicious:"}
+          </span>
+          <p className="text-xs sm:text-sm text-slate-200 leading-relaxed break-words font-sans">
+            {reason.text}
+          </p>
+        </div>
       )}
     </div>
   );
