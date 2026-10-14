@@ -349,6 +349,10 @@ export default function ResultPanel({ result }) {
     tag = 'EXCESSIVE LENGTH';
   } else if (anomalies.includes('multiple_targets')) {
     tag = 'MULTIPLE TARGETS';
+  } else if (anomalies.includes('multiple_redirect_chain')) {
+    tag = 'REDIRECT CHAIN';
+  } else if (anomalies.includes('open_redirect_param')) {
+    tag = 'OPEN REDIRECT';
   } else if (anomalies.includes('unrecognized_input')) {
     tag = 'UNRECOGNIZED INPUT';
   } else if (verdict === 'safe') {

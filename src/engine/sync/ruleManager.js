@@ -13,7 +13,7 @@
  */
 
 export const STORAGE_KEY = 'link_sentinel_threat_rules_v1';
-export const DEFAULT_RULE_VERSION = '2026.10.1';
+export const DEFAULT_RULE_VERSION = '2026.10.2';
 
 export const DEFAULT_SIGNATURES = Object.freeze({
   brandCatalog: Object.freeze([
@@ -262,7 +262,7 @@ export function getRuleMetadata() {
 
   return {
     version: DEFAULT_RULE_VERSION,
-    updatedAt: '2026-10-14T00:00:00Z',
+    updatedAt: '2026-10-14T12:35:00Z',
     source: 'bundled_default'
   };
 }

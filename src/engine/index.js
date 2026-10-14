@@ -24,6 +24,7 @@ import { evaluateShortenerRule } from './rules/shortenerRule.js';
 import { checkCombosquatting, evaluateCombosquattingRule } from './rules/combosquattingRule.js';
 import { checkScamLure, evaluateScamLureRule } from './rules/scamLureRule.js';
 import { checkSpecialTld, evaluateSpecialTldRule } from './rules/specialTldRule.js';
+import { evaluateNestedRedirects, evaluateNestedRedirectRule } from './rules/nestedRedirectRule.js';
 import { detectAndParsePayload } from './payloads/index.js';
 
 export { parseInput } from './parse.js';
@@ -36,6 +37,7 @@ export { evaluateShortenerRule } from './rules/shortenerRule.js';
 export { checkCombosquatting, evaluateCombosquattingRule } from './rules/combosquattingRule.js';
 export { checkScamLure, evaluateScamLureRule } from './rules/scamLureRule.js';
 export { checkSpecialTld, evaluateSpecialTldRule } from './rules/specialTldRule.js';
+export { evaluateNestedRedirects, evaluateNestedRedirectRule } from './rules/nestedRedirectRule.js';
 export { detectAndParsePayload } from './payloads/index.js';
 
 /**
@@ -361,6 +363,11 @@ export function analyze(input) {
     specialTldRes.rules.forEach((r) => rules.push(r));
     specialTldRes.anomalies.forEach((a) => anomaliesSet.add(a));
 
+    // 9. Nested Redirect Chain Detection Heuristic (offline parameter traversal)
+    const redirectRes = evaluateNestedRedirectRule(context);
+    redirectRes.rules.forEach((r) => rules.push(r));
+    redirectRes.anomalies.forEach((a) => anomaliesSet.add(a));
+
     // Aggregation hierarchy: "suspicious" > "review" > "safe"
     let verdict = 'safe';
     const hasSuspicious = rules.some((r) => r.severity === 'suspicious');
@@ -403,7 +410,15 @@ export function analyze(input) {
     let tag;
     let primaryReason;
 
-    if (anomaliesSet.has('combosquatting_lure') || rules.some((r) => r.id === 'combosquatting_phishing_lure')) {
+    if (anomaliesSet.has('multiple_redirect_chain') || rules.some((r) => r.id === 'nested-redirect-chain')) {
+      const redRule = rules.find((r) => r.id === 'nested-redirect-chain');
+      tag = 'REDIRECT CHAIN';
+      primaryReason = redRule?.primaryReason || redRule?.reason || "Multiple Redirect Chain — Nested redirect parameters detected bouncing across multiple destinations.";
+    } else if (anomaliesSet.has('open_redirect_param') || rules.some((r) => r.id === 'open-redirect-parameter')) {
+      const redRule = rules.find((r) => r.id === 'open-redirect-parameter');
+      tag = 'OPEN REDIRECT';
+      primaryReason = redRule?.primaryReason || redRule?.reason || "Embedded Redirect Parameter — Link forwards to an external destination via query parameter.";
+    } else if (anomaliesSet.has('combosquatting_lure') || rules.some((r) => r.id === 'combosquatting_phishing_lure')) {
       const comboRule = rules.find((r) => r.id === 'combosquatting_phishing_lure');
       tag = 'COMBOSQUATTING';
       primaryReason = comboRule?.primaryReason || comboRule?.reason || "Combosquatting Detected — Domain couples authentic brand name with high-risk lure keyword.";
@@ -468,10 +483,27 @@ export function analyze(input) {
     if (!anomaliesSet.has('reserved_special_tld')) {
       passedRules.push('Routable public top-level domain (RFC 2606 / RFC 6761 compliant)');
     }
+    if (!anomaliesSet.has('multiple_redirect_chain') && !anomaliesSet.has('open_redirect_param')) {
+      passedRules.push('Zero nested redirect parameters or bounce chains');
+    }
+
+    // Risk score computation
+    const scoreImpact = redirectRes.nestedRedirects?.scoreImpact || 0;
+    let riskScore = 0;
+    if (verdict === 'suspicious') {
+      riskScore = 80 + Math.min(20, scoreImpact);
+    } else if (verdict === 'review') {
+      riskScore = 35 + Math.min(25, scoreImpact);
+    } else {
+      riskScore = 0;
+    }
 
     const result = {
       input: rawInput,
       verdict,
+      riskScore,
+      scoreImpact,
+      nestedRedirects: redirectRes.nestedRedirects,
       parts,
       anomalies: Array.from(anomaliesSet),
       rules,

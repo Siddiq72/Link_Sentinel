@@ -140,6 +140,20 @@ export function getRuleBreakdown(rule) {
     };
   }
 
+  // 8b. Nested Redirect Chain & Open Redirect Parameter
+  if (id === 'nested-redirect-chain') {
+    return {
+      mechanism: rule?.mechanism || 'URL parameters contain a multi-hop nested redirect chain.',
+      securityImpact: rule?.securityImpact || 'Attackers use layered parameter bouncing to bypass standard link filters and redirect users to uninspected destinations.'
+    };
+  }
+  if (id === 'open-redirect-parameter') {
+    return {
+      mechanism: rule?.mechanism || 'URL query parameter points to an external destination.',
+      securityImpact: rule?.securityImpact || 'Embedded redirect parameters can be abused to bounce users from a trusted domain to a malicious target.'
+    };
+  }
+
   // 9. Dangerous schemes (javascript, vbscript, data:html)
   if (id === 'dangerous-scheme-javascript' || id === 'dangerous-scheme-vbscript') {
     return {
