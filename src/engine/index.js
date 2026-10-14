@@ -22,6 +22,8 @@ import { evaluateIpRule } from './rules/ipRule.js';
 import { evaluateLookalikeRule } from './rules/lookalikeRule.js';
 import { evaluateShortenerRule } from './rules/shortenerRule.js';
 import { checkCombosquatting, evaluateCombosquattingRule } from './rules/combosquattingRule.js';
+import { checkScamLure, evaluateScamLureRule } from './rules/scamLureRule.js';
+import { checkSpecialTld, evaluateSpecialTldRule } from './rules/specialTldRule.js';
 import { detectAndParsePayload } from './payloads/index.js';
 
 export { parseInput } from './parse.js';
@@ -32,6 +34,8 @@ export { evaluateIpRule } from './rules/ipRule.js';
 export { evaluateLookalikeRule } from './rules/lookalikeRule.js';
 export { evaluateShortenerRule } from './rules/shortenerRule.js';
 export { checkCombosquatting, evaluateCombosquattingRule } from './rules/combosquattingRule.js';
+export { checkScamLure, evaluateScamLureRule } from './rules/scamLureRule.js';
+export { checkSpecialTld, evaluateSpecialTldRule } from './rules/specialTldRule.js';
 export { detectAndParsePayload } from './payloads/index.js';
 
 /**
@@ -183,6 +187,7 @@ export function analyze(input) {
           candidateHost.endsWith('.example') ||
           candidateHost.endsWith('.localhost') ||
           candidateHost.endsWith('.test') ||
+          candidateHost.endsWith('.invalid') ||
           candidateHost.endsWith('.local')
         ) {
           hasRecognizedTld = true;
@@ -346,6 +351,16 @@ export function analyze(input) {
     combosquattingRes.rules.forEach((r) => rules.push(r));
     combosquattingRes.anomalies.forEach((a) => anomaliesSet.add(a));
 
+    // 7. Generic Social Engineering Scam Lure Heuristic
+    const scamLureRes = evaluateScamLureRule(context);
+    scamLureRes.rules.forEach((r) => rules.push(r));
+    scamLureRes.anomalies.forEach((a) => anomaliesSet.add(a));
+
+    // 8. Reserved & Special-Use TLD Guard (RFC 2606 / RFC 6761)
+    const specialTldRes = evaluateSpecialTldRule(context);
+    specialTldRes.rules.forEach((r) => rules.push(r));
+    specialTldRes.anomalies.forEach((a) => anomaliesSet.add(a));
+
     // Aggregation hierarchy: "suspicious" > "review" > "safe"
     let verdict = 'safe';
     const hasSuspicious = rules.some((r) => r.severity === 'suspicious');
@@ -392,12 +407,20 @@ export function analyze(input) {
       const comboRule = rules.find((r) => r.id === 'combosquatting_phishing_lure');
       tag = 'COMBOSQUATTING';
       primaryReason = comboRule?.primaryReason || comboRule?.reason || "Combosquatting Detected — Domain couples authentic brand name with high-risk lure keyword.";
+    } else if (anomaliesSet.has('social_engineering_lure') || rules.some((r) => r.id === 'social_engineering_lure')) {
+      const scamRule = rules.find((r) => r.id === 'social_engineering_lure');
+      tag = 'SCAM LURE';
+      primaryReason = scamRule?.primaryReason || scamRule?.reason;
     } else if (anomaliesSet.has('executable_data') || rules.some((r) => r.id === 'dangerous-scheme-data-html')) {
       tag = 'EXECUTABLE DATA';
       primaryReason = "Data URI Scheme — Encodes inline executable HTML or script content directly inside the link.";
     } else if (anomaliesSet.has('non_latin_script') || rules.some((r) => r.id === 'non-latin-script')) {
       tag = 'NON-LATIN SCRIPT';
       primaryReason = "Internationalized Domain Name — Uses full non-Latin script. Cannot verify authority against Latin-alphabet targets offline.";
+    } else if (anomaliesSet.has('reserved_special_tld') || rules.some((r) => r.id === 'reserved_special_tld')) {
+      const tldRule = rules.find((r) => r.id === 'reserved_special_tld');
+      tag = 'RESERVED TLD';
+      primaryReason = tldRule?.primaryReason || tldRule?.reason;
     }
 
     // Provide informative default rule for safe verdicts if none fired
@@ -438,6 +461,12 @@ export function analyze(input) {
     }
     if (!anomaliesSet.has('combosquatting_lure')) {
       passedRules.push('No combosquatting brand-lure keyword pairing');
+    }
+    if (!anomaliesSet.has('social_engineering_lure')) {
+      passedRules.push('No generic social engineering prize or scam lure patterns');
+    }
+    if (!anomaliesSet.has('reserved_special_tld')) {
+      passedRules.push('Routable public top-level domain (RFC 2606 / RFC 6761 compliant)');
     }
 
     const result = {

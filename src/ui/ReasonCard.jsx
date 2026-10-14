@@ -60,6 +60,22 @@ export function getRuleBreakdown(rule) {
     };
   }
 
+  // Generic Social Engineering Scam Lure
+  if (id === 'social_engineering_lure') {
+    return {
+      mechanism: rule?.mechanism || 'Domain registers multiple high-pressure reward or prize lure keywords.',
+      securityImpact: rule?.securityImpact || 'Attackers use high-urgency reward tokens to manipulate user trust and bypass basic brand-specific filters.'
+    };
+  }
+
+  // Reserved & Special-Use TLD
+  if (id === 'reserved_special_tld') {
+    return {
+      mechanism: rule?.mechanism || 'TLD matches permanently reserved non-routable namespace (RFC 2606 / RFC 6761).',
+      securityImpact: rule?.securityImpact || 'Cannot be verified via public DNS and cannot establish authenticated connections.'
+    };
+  }
+
   // 1. Standard institutional safe route
   if (id === 'standard-route') {
     return {

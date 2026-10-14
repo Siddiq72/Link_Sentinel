@@ -20,6 +20,13 @@ export function getVerdictSummary({ verdict, parts, anomalies = [], rules = [] }
       return comboRule?.reason || comboRule?.primaryReason || 'Combosquatting brand lure detected.';
     }
 
+    // Generic Scam Lure
+    const isScamLure = anomalies.includes('social_engineering_lure') || rules.some((r) => r.id === 'social_engineering_lure');
+    if (isScamLure) {
+      const scamRule = rules.find((r) => r.id === 'social_engineering_lure');
+      return scamRule?.reason || scamRule?.primaryReason || 'Social engineering scam lure detected.';
+    }
+
     // 1. Suspicious (@ trick): "The real host is <host>, not <decoy>."
     const isUserinfoDecoy = anomalies.includes('userinfo_decoy') || rules.some((r) => r.id === 'authority-routing-trap');
     if (isUserinfoDecoy) {
@@ -60,6 +67,13 @@ export function getVerdictSummary({ verdict, parts, anomalies = [], rules = [] }
   }
 
   if (verdict === 'review') {
+    // Reserved TLD
+    const isReservedTld = anomalies.includes('reserved_special_tld') || rules.some((r) => r.id === 'reserved_special_tld');
+    if (isReservedTld) {
+      const tldRule = rules.find((r) => r.id === 'reserved_special_tld');
+      return tldRule?.reason || tldRule?.primaryReason || 'Special-use or reserved TLD detected.';
+    }
+
     // Review: use the first Review reason.
     const firstReviewRule = rules.find((r) => r.severity?.toLowerCase() === 'review');
     if (firstReviewRule) {
@@ -96,6 +110,18 @@ export function getPrimaryReason(arg) {
       return {
         label: "Why it's flagged as Suspicious:",
         text: comboRule?.reason || comboRule?.primaryReason || 'Combosquatting Detected — Domain couples authentic brand name with high-risk keyword to mimic legitimate services.'
+      };
+    }
+
+    // Generic Scam Lure
+    const isScamLure =
+      anomalies.includes('social_engineering_lure') ||
+      rules.some((r) => r.id === 'social_engineering_lure');
+    if (isScamLure) {
+      const scamRule = rules.find((r) => r.id === 'social_engineering_lure');
+      return {
+        label: "Why it's flagged as Suspicious:",
+        text: scamRule?.primaryReason || scamRule?.reason || 'Social Engineering Lure Detected — Domain registers multiple high-pressure reward or prize lure keywords commonly used in lottery and credential-harvesting campaigns.'
       };
     }
 
@@ -191,6 +217,18 @@ export function getPrimaryReason(arg) {
   }
 
   if (verdict === 'review') {
+    // Reserved Special-Use TLD
+    const isReservedTld =
+      anomalies.includes('reserved_special_tld') ||
+      rules.some((r) => r.id === 'reserved_special_tld');
+    if (isReservedTld) {
+      const tldRule = rules.find((r) => r.id === 'reserved_special_tld');
+      return {
+        label: 'Why review is required:',
+        text: tldRule?.primaryReason || tldRule?.reason || 'Reserved TLD Detected — The domain uses a special-use extension under RFC 2606 that cannot be registered or resolved on the public Internet.'
+      };
+    }
+
     // 1. Non-Latin Script Domain
     if (anomalies.includes('non_latin_script') || rules.some((r) => r.id === 'non-latin-script')) {
       return {
@@ -299,6 +337,10 @@ export default function ResultPanel({ result }) {
     tag = 'PLAIN TEXT';
   } else if (anomalies.includes('combosquatting_lure') || rules.some((r) => r.id === 'combosquatting_phishing_lure')) {
     tag = 'COMBOSQUATTING';
+  } else if (anomalies.includes('social_engineering_lure') || rules.some((r) => r.id === 'social_engineering_lure')) {
+    tag = 'SCAM LURE';
+  } else if (anomalies.includes('reserved_special_tld') || rules.some((r) => r.id === 'reserved_special_tld')) {
+    tag = 'RESERVED TLD';
   } else if (anomalies.includes('executable_data')) {
     tag = 'EXECUTABLE DATA';
   } else if (anomalies.includes('non_latin_script')) {
