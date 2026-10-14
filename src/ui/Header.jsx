@@ -1,5 +1,6 @@
 import React from 'react';
 import { ShieldLockIcon } from './icons';
+import RuleStatusBadge from './RuleStatusBadge';
 
 export default function Header({ onOpenSelfTest }) {
   return (
@@ -20,7 +21,9 @@ export default function Header({ onOpenSelfTest }) {
       </div>
 
       {/* Right: Actions / Badges Grouping */}
-      <div className="flex items-center gap-2 shrink-0">
+      <div className="flex items-center gap-2 shrink-0 flex-wrap sm:flex-nowrap">
+        {/* Tactical Rule Engine Status Badge */}
+        <RuleStatusBadge />
         {/* Self-Test Evidence Trigger Button */}
         <button
           type="button"

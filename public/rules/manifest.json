@@ -1,0 +1,71 @@
+{
+  "version": "2026.10.1",
+  "updatedAt": "2026-10-14T00:00:00Z",
+  "signatures": {
+    "brandCatalog": [
+      "google",
+      "paypal",
+      "microsoft",
+      "apple",
+      "amazon",
+      "netflix",
+      "chase",
+      "wellsfargo",
+      "sbi",
+      "fampay",
+      "binance",
+      "coinbase",
+      "facebook",
+      "instagram",
+      "dropbox",
+      "adobe",
+      "steam"
+    ],
+    "credentialLures": [
+      "login",
+      "signin",
+      "verify",
+      "verification",
+      "security",
+      "secure",
+      "account",
+      "portal",
+      "update",
+      "billing",
+      "support",
+      "auth",
+      "service",
+      "kyc",
+      "otp",
+      "wallet",
+      "helpdesk",
+      "claim",
+      "recover"
+    ],
+    "scamOffers": [
+      "free",
+      "gift",
+      "prize",
+      "reward",
+      "bonus",
+      "airdrop",
+      "claim",
+      "winner",
+      "giveaway",
+      "lottery",
+      "crypto",
+      "cash"
+    ],
+    "scamActions": [
+      "claim",
+      "collect",
+      "redeem",
+      "payout",
+      "jackpot",
+      "winner",
+      "survey",
+      "instant",
+      "reward"
+    ]
+  }
+}

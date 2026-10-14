@@ -10,6 +10,7 @@
 
 import psl from 'psl';
 import { analyzeDomain } from '../domain.js';
+import { getActiveSignatures } from '../sync/ruleManager.js';
 
 export const TARGET_BRANDS = [
   'google',
@@ -157,11 +158,18 @@ export function checkCombosquatting(domainInput) {
     return { triggered: false };
   }
 
+  // Resolve threat signatures dynamically with fallback to bundled defaults
+  const activeSigs = getActiveSignatures();
+  const brandsList = activeSigs?.brandCatalog || TARGET_BRANDS;
+  const luresList = activeSigs?.credentialLures || LURE_KEYWORDS;
+  const brandsSet = new Set(brandsList);
+  const luresSet = new Set(luresList);
+
   // Check if any token matches a brand from the target list AND at least one other token matches a lure keyword
   let matchedBrand = null;
   let brandIndex = -1;
   for (let i = 0; i < tokens.length; i++) {
-    if (TARGET_BRANDS_SET.has(tokens[i])) {
+    if (brandsSet.has(tokens[i])) {
       matchedBrand = tokens[i];
       brandIndex = i;
       break;
@@ -174,7 +182,7 @@ export function checkCombosquatting(domainInput) {
 
   let matchedKeyword = null;
   for (let j = 0; j < tokens.length; j++) {
-    if (j !== brandIndex && LURE_KEYWORDS_SET.has(tokens[j])) {
+    if (j !== brandIndex && luresSet.has(tokens[j])) {
       matchedKeyword = tokens[j];
       break;
     }

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Header from './ui/Header';
 import InputCard from './ui/InputCard';
 import ResultPanel from './ui/ResultPanel';
@@ -7,6 +7,7 @@ import ErrorState from './ui/ErrorState';
 import Footer from './ui/Footer';
 import SelfTestModal from './ui/SelfTestModal';
 import { analyze } from './engine';
+import { syncRulesOnline } from './engine/sync/ruleManager';
 import { decodeQrImage } from './qr/decodeQr';
 import { AlertCircleIcon } from './ui/icons';
 
@@ -22,6 +23,16 @@ export default function App() {
   const [isSelfTestOpen, setIsSelfTestOpen] = useState(false);
 
   const resultRef = useRef(null);
+
+  // Automatically synchronize threat signatures once on app mount if network is available
+  useEffect(() => {
+    if (typeof navigator !== 'undefined' && navigator.onLine) {
+      syncRulesOnline().catch((err) => {
+        // Fail-safe: offline fallback is completely transparent
+        console.debug('Online rule sync skipped or failed:', err);
+      });
+    }
+  }, []);
 
   // Imperatively scroll smoothly to the result section on mobile/tablet viewports (< 1024px)
   const scrollToResultOnMobile = () => {

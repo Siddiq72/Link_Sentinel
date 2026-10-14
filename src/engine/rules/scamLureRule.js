@@ -12,6 +12,7 @@ import psl from 'psl';
 import { analyzeDomain } from '../domain.js';
 import { AUTHENTIC_BRAND_DOMAINS } from './combosquattingRule.js';
 import { PROTECTED_DOMAINS } from '../data/protectedDomains.js';
+import { getActiveSignatures } from '../sync/ruleManager.js';
 
 export const SCAM_LURE_GROUP_A = [
   'free',
@@ -98,10 +99,16 @@ export function checkScamLure(domainInput) {
     return { triggered: false };
   }
 
+  // Resolve threat signatures dynamically with fallback to bundled defaults
+  const activeSigs = getActiveSignatures();
+  const offers = activeSigs?.scamOffers || SCAM_LURE_GROUP_A;
+  const actions = activeSigs?.scamActions || SCAM_LURE_GROUP_B;
+  const scamDictSet = new Set([...offers, ...actions]);
+
   // Find distinct matching tokens preserving order of occurrence
   const matchedTokens = [];
   for (const token of tokens) {
-    if (SCAM_DICTIONARY_SET.has(token) && !matchedTokens.includes(token)) {
+    if (scamDictSet.has(token) && !matchedTokens.includes(token)) {
       matchedTokens.push(token);
     }
   }
