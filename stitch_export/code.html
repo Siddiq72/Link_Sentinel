@@ -242,7 +242,7 @@
         url: 'https://portal.campus.example:8443/forms/submit?id=42&contact=lab@campus.example',
         verdict: 'SAFE',
         domain: 'campus.example',
-        subline: 'No deception signals found. This is not a guarantee.',
+        subline: "No structural red flags found. This checks the link's structure only, not the page's content or reputation.",
         reason: 'The @ appears in the query, so it is not a login trick.'
       },
       'F': {
@@ -607,11 +607,16 @@
                     <h2 class="text-2xl sm:text-3xl font-extrabold text-emerald-400 tracking-tight">SAFE</h2>
                   </div>
                 </div>
-                <span class="px-3 py-1 rounded bg-emerald-950 border border-emerald-500/40 text-emerald-300 text-xs font-mono font-bold">LEGITIMATE</span>
+                <span class="px-3 py-1 rounded-md bg-emerald-500/20 border border-emerald-400/60 text-emerald-300 text-xs font-mono font-bold tracking-wider uppercase shadow-[0_0_12px_rgba(16,185,129,0.15)]">NO RED FLAGS</span>
               </div>
               <p class="text-xs sm:text-sm text-slate-300 border-t border-emerald-900/60 pt-2.5">
-                No deception signals found. This is not a guarantee.
+                No structural red flags found. This checks the link's structure only, not the page's content or reputation.
               </p>
+              <div role="note" aria-label="Security advisory" class="rounded-xl p-3 sm:p-3.5 bg-amber-500/10 border border-amber-500/30 flex items-center gap-2.5 shadow-sm mt-1">
+                <p class="text-xs sm:text-sm text-amber-200/95 font-sans leading-relaxed">
+                  <strong class="text-amber-300 font-semibold">Still unsure?</strong> Don't enter passwords or payment details on a link you didn't expect.
+                </p>
+              </div>
             </div>
 
             <!-- URL Anatomy Breakdown with Port and Query Tokens -->

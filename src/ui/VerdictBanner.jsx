@@ -91,7 +91,7 @@ export default function VerdictBanner({ verdict, tag, primaryReason, summary, su
           </div>
           <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
             {renderCopyButton()}
-            <span className="px-3 py-1 rounded bg-emerald-950 border border-emerald-500/40 text-emerald-300 text-xs font-mono font-bold">
+            <span className="px-3 py-1 rounded-md bg-emerald-500/20 border border-emerald-400/60 text-emerald-300 text-xs font-mono font-bold tracking-wider uppercase shadow-[0_0_12px_rgba(16,185,129,0.15)]">
               {tag || 'NO RED FLAGS'}
             </span>
           </div>
@@ -107,9 +107,24 @@ export default function VerdictBanner({ verdict, tag, primaryReason, summary, su
           </p>
         </div>
 
-        <p className="text-xs sm:text-sm text-slate-300 border-t border-emerald-900/60 pt-2.5 font-sans">
-          No deception signals found. This is not a guarantee.
+        {/* Primary Explanatory Sub-text */}
+        <p className="text-xs sm:text-sm text-slate-300 border-t border-emerald-900/60 pt-2.5 font-sans leading-relaxed">
+          {summary || subtitle || "No structural red flags found. This checks the link's structure only, not the page's content or reputation."}
         </p>
+
+        {/* Persistent Security Advisory Callout */}
+        <div
+          role="note"
+          aria-label="Security advisory"
+          className="rounded-xl p-3 sm:p-3.5 bg-amber-500/10 border border-amber-500/30 flex items-start sm:items-center gap-2.5 shadow-sm"
+        >
+          <div className="w-5 h-5 rounded-md bg-amber-500/20 border border-amber-500/40 flex items-center justify-center shrink-0 mt-0.5 sm:mt-0 text-amber-400">
+            <AlertTriangleIcon className="w-3.5 h-3.5" />
+          </div>
+          <p className="text-xs sm:text-sm text-amber-200/95 font-sans leading-relaxed">
+            <strong className="text-amber-300 font-semibold">Still unsure?</strong> Don't enter passwords or payment details on a link you didn't expect.
+          </p>
+        </div>
       </div>
     );
   }

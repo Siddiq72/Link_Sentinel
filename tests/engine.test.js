@@ -265,7 +265,7 @@ describe('Plain-Language Verdict Summary Sentences', () => {
   it('Safe: keeps the SAFE caveat', () => {
     const res = analyze('https://campus.example/notices/lab-3');
     const summary = getVerdictSummary(res);
-    expect(summary).toBe('No deception signals found. This is not a guarantee.');
+    expect(summary).toBe("No structural red flags found. This checks the link's structure only, not the page's content or reputation.");
   });
 });
 

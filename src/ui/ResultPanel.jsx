@@ -9,7 +9,7 @@ import TextPayloadCard from './payloads/TextPayloadCard';
 
 export function getVerdictSummary({ verdict, parts, anomalies = [], rules = [] }) {
   if (verdict === 'safe') {
-    return 'No deception signals found. This is not a guarantee.';
+    return "No structural red flags found. This checks the link's structure only, not the page's content or reputation.";
   }
 
   if (verdict === 'suspicious') {
