@@ -10,6 +10,7 @@ import { analyze } from './engine';
 import { syncRulesOnline } from './engine/sync/ruleManager';
 import { decodeQrImage } from './qr/decodeQr';
 import { AlertCircleIcon } from './ui/icons';
+import WebThreads from './components/ui/WebThreads';
 
 export default function App() {
   const [inputVal, setInputVal] = useState('');
@@ -140,15 +141,34 @@ export default function App() {
   };
 
   return (
-    <div className="bg-[#070d18] text-on-surface min-h-screen flex flex-col justify-between selection:bg-cyan-500 selection:text-slate-950 relative overflow-x-hidden">
+    <div className="relative min-h-screen w-full bg-[#070d18] text-white flex flex-col justify-between selection:bg-cyan-500 selection:text-slate-950 overflow-hidden">
       {/* Subtle ambient tactical glow */}
-      <div className="fixed inset-0 pointer-events-none bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(6,182,212,0.08),rgba(255,255,255,0))] -z-10" aria-hidden="true" />
+      <div className="fixed inset-0 pointer-events-none bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(6,182,212,0.08),rgba(255,255,255,0))] z-0" aria-hidden="true" />
+
+      {/* Responsive WebGL background layer */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden" aria-hidden="true">
+        <WebThreads
+          colors={['#06b6d4', '#3b82f6', '#8b5cf6', '#10b981']}
+          coreColor="#22d3ee"
+          backgroundColor="transparent"
+          threadCount={8}
+          frequency={3.5}
+          speed={0.15}
+          spread={0.22}
+          glow={0.04}
+          brightness={0.8}
+          opacity={0.6}
+          mouseInteraction={true}
+          pulseOnClick={true}
+          className="w-full h-full"
+        />
+      </div>
 
       {/* 1. Header */}
       <Header onOpenSelfTest={() => setIsSelfTestOpen(true)} />
 
       {/* 2. Main 2-Column Application Layout */}
-      <main className="w-full flex-1 max-w-[1280px] mx-auto px-4 sm:px-6 py-8">
+      <main className="w-full flex-1 max-w-[1280px] mx-auto px-4 sm:px-6 py-8 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* LEFT COLUMN: Input Section (Mobile-first, 12 cols on mobile, 5 cols on lg) */}
           <section className="lg:col-span-5 flex flex-col gap-6" aria-label="Input Section">
