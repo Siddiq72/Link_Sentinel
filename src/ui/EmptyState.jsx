@@ -5,7 +5,7 @@ export default function EmptyState() {
   return (
     <div className="bg-[#0c1729] border border-cyan-500/20 shadow-2xl rounded-2xl p-6 sm:p-10 text-center flex flex-col items-center justify-center gap-5 min-h-[440px] backdrop-blur-xl">
       {/* Tactical radar/shield graphic with pulse ring */}
-      <div className="relative flex items-center justify-center my-1">
+      <div className="relative flex items-center justify-center mt-2 mb-6 sm:mb-7">
         <div className="absolute w-24 h-24 rounded-full ring-1 ring-cyan-500/20 bg-cyan-950/20 animate-pulse pointer-events-none" />
         <div className="absolute w-32 h-32 rounded-full border border-cyan-500/10 pointer-events-none" />
         <div className="w-16 h-16 rounded-2xl bg-slate-900/90 flex items-center justify-center text-cyan-400 shadow-[0_0_30px_rgba(6,182,212,0.25)] border border-cyan-500/40 relative z-10 transition-transform duration-300 hover:scale-105">
@@ -15,11 +15,11 @@ export default function EmptyState() {
 
       {/* Header and status badge */}
       <div className="flex flex-col items-center gap-2 max-w-md">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-950/40 border border-cyan-500/30 text-[11px] font-mono font-semibold tracking-wider text-cyan-300 shadow-sm">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-950/40 border border-cyan-500/30 text-[11px] font-mono font-semibold tracking-wider text-cyan-300 shadow-sm mt-1">
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping shrink-0" aria-hidden="true" />
           <span>HEURISTIC ENGINE ARMED // 0 NETWORK TELEMETRY</span>
         </div>
-        <h2 className="text-xl sm:text-2xl font-bold text-on-surface tracking-tight mt-1">
+        <h2 className="text-xl sm:text-2xl font-bold text-on-surface tracking-tight mt-3">
           Awaiting Target Stream
         </h2>
         <p className="text-sm text-slate-400 leading-relaxed max-w-sm">
