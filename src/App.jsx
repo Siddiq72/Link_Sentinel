@@ -52,29 +52,14 @@ export default function App() {
     }
   };
 
-  // Handles typing and pasting: immediately runs link analysis when valid without scrolling
+  // Handles typing and pasting: updates input state without automatically running analysis
   const handleInputChange = (newVal) => {
     setInputVal(newVal);
     setQrError('');
     setQrSuccessNotice('');
-    const targetUrl = typeof newVal === 'string' ? newVal.trim() : '';
-
-    if (!targetUrl) {
-      setStatus('idle');
-      setResultData(null);
-      setErrorMessage('');
-      return;
-    }
-
-    try {
-      const result = analyze(targetUrl);
-      setResultData(result);
-      setStatus('result');
-      setErrorMessage('');
-      // Deliberately no auto-scroll on keystroke
-    } catch {
-      // While typing an incomplete URL, keep current view without interrupting
-    }
+    setStatus('idle');
+    setResultData(null);
+    setErrorMessage('');
   };
 
   // Executes link analysis through the single analyze() integration point
@@ -101,12 +86,14 @@ export default function App() {
     }
   };
 
-  // Handles clicking any example chip
+  // Handles clicking any example chip: populates input only, keeping idle state until Analyze is clicked
   const handleSelectSample = (sampleUrl) => {
     setInputVal(sampleUrl);
     setQrError('');
     setQrSuccessNotice('');
-    handleAnalyze(sampleUrl);
+    setStatus('idle');
+    setResultData(null);
+    setErrorMessage('');
   };
 
   // Clears input and returns UI to idle empty state
@@ -119,7 +106,7 @@ export default function App() {
     setQrSuccessNotice('');
   };
 
-  // Handles QR image file upload and client-side barcode decoding
+  // Handles QR image file upload and client-side barcode decoding: populates input without auto-analyzing
   const handleQrUpload = async (file) => {
     if (!file) return;
 
@@ -130,8 +117,10 @@ export default function App() {
     try {
       const decodedText = await decodeQrImage(file);
       setInputVal(decodedText);
-      handleAnalyze(decodedText);
-      setQrSuccessNotice(`QR code decoded successfully: ${decodedText}`);
+      setStatus('idle');
+      setResultData(null);
+      setErrorMessage('');
+      setQrSuccessNotice('QR code decoded. Press Analyze to inspect.');
     } catch (err) {
       const msg = err?.message || 'No readable QR code found';
       setQrError(msg);
